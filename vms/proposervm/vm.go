@@ -433,6 +433,73 @@ func (vm *VM) LastAccepted(ctx context.Context) (ids.ID, error) {
 	return lastAccepted, err
 }
 
+func (vm *VM) persistPreference(preferred ids.ID) error {
+	// Get the corresponding preferred block and iterate back to the last accepted block
+	// writing the entire preferred chain to disk if they have not already been persisted
+	// as a preferred block
+
+	// Write the latest preferredID to the database
+
+	// TODO: remove blocks from this database on Accept/Reject and during Initialize
+	// to make sure anything that does not remain in the preferred chain is removed.
+
+	// TODO: provide handling for the case that a previously preferred block is not
+	// valid after restart (chain config flag to override?)
+	// TODO: update repair to make sure that the preference of the innerVM is handled correctly
+	return nil
+}
+
+func (vm *VM) rollForwardInnerVMAcceptedBlock(ctx context.Context) error {
+	innerLastAcceptedID, err := vm.ChainVM.LastAccepted(ctx)
+	if err != nil {
+		return err
+	}
+	innerLastAcceptedBlock, err := vm.ChainVM.GetBlock(ctx, innerLastAcceptedID)
+	if err != nil {
+		return err
+	}
+
+	outerLastAcceptedID, err := vm.State.GetLastAccepted()
+	if err != nil {
+		return err
+	}
+	outerLastAcceptedBlock, err := vm.getPostForkBlock(ctx, outerLastAcceptedID)
+	if err != nil {
+		return err
+	}
+
+	if outerLastAcceptedBlock.Height() < innerLastAcceptedBlock.Height() {
+		return fmt.Errorf("proposervm last accepted block (%d, %s) should never be lower than inner VM last accepted block (%d, %s)",
+			outerLastAcceptedBlock.Height(),
+			outerLastAcceptedID,
+			innerLastAcceptedBlock.Height(),
+			innerLastAcceptedID,
+		)
+	}
+
+	// Roll the innerVM forward to reach the last accepted block of the outerVM
+	for innerHeight := innerLastAcceptedBlock.Height() + 1; innerHeight < outerLastAcceptedBlock.Height(); innerHeight++ {
+		outerBlkID, err := vm.State.GetBlockIDAtHeight(innerHeight)
+		if err != nil {
+			return err
+		}
+		outerBlk, err := vm.getPostForkBlock(ctx, outerBlkID)
+		if err != nil {
+			return err
+		}
+		innerBlock := outerBlk.getInnerBlk()
+
+		if err := innerBlock.Verify(ctx); err != nil {
+			return err
+		}
+		if err := innerBlock.Accept(ctx); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // repair makes sure that vm and innerVM chains are in sync.
 // Moreover it fixes vm's height index if defined.
 func (vm *VM) repair(ctx context.Context) error {
