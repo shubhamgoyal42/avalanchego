@@ -233,6 +233,21 @@ func (mr *MockChainVMMockRecorder) GetBlockIDAtHeight(arg0, arg1 any) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBlockIDAtHeight", reflect.TypeOf((*MockChainVM)(nil).GetBlockIDAtHeight), arg0, arg1)
 }
 
+// GetPreference mocks base method.
+func (m *MockChainVM) GetPreference(arg0 context.Context) (ids.ID, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPreference", arg0)
+	ret0, _ := ret[0].(ids.ID)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPreference indicates an expected call of GetPreference.
+func (mr *MockChainVMMockRecorder) GetPreference(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPreference", reflect.TypeOf((*MockChainVM)(nil).GetPreference), arg0)
+}
+
 // HealthCheck mocks base method.
 func (m *MockChainVM) HealthCheck(arg0 context.Context) (any, error) {
 	m.ctrl.T.Helper()

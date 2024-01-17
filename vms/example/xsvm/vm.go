@@ -160,6 +160,10 @@ func (vm *VM) SetPreference(_ context.Context, preferred ids.ID) error {
 	return nil
 }
 
+func (vm VM) GetPreference(_ context.Context) (ids.ID, error) {
+	return vm.builder.Preferred(), nil
+}
+
 func (vm *VM) LastAccepted(context.Context) (ids.ID, error) {
 	return vm.chain.LastAccepted(), nil
 }

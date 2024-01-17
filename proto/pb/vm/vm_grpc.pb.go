@@ -30,6 +30,7 @@ const (
 	VM_ParseBlock_FullMethodName                 = "/vm.VM/ParseBlock"
 	VM_GetBlock_FullMethodName                   = "/vm.VM/GetBlock"
 	VM_SetPreference_FullMethodName              = "/vm.VM/SetPreference"
+	VM_GetPreference_FullMethodName              = "/vm.VM/GetPreference"
 	VM_Health_FullMethodName                     = "/vm.VM/Health"
 	VM_Version_FullMethodName                    = "/vm.VM/Version"
 	VM_AppRequest_FullMethodName                 = "/vm.VM/AppRequest"
@@ -79,6 +80,8 @@ type VMClient interface {
 	GetBlock(ctx context.Context, in *GetBlockRequest, opts ...grpc.CallOption) (*GetBlockResponse, error)
 	// Notify the VM of the currently preferred block.
 	SetPreference(ctx context.Context, in *SetPreferenceRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// Retrieve the currently preferred block from the VM.
+	GetPreference(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetPreferenceResponse, error)
 	// Attempt to verify the health of the VM.
 	Health(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*HealthResponse, error)
 	// Version returns the version of the VM.
@@ -217,6 +220,15 @@ func (c *vMClient) GetBlock(ctx context.Context, in *GetBlockRequest, opts ...gr
 func (c *vMClient) SetPreference(ctx context.Context, in *SetPreferenceRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, VM_SetPreference_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *vMClient) GetPreference(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetPreferenceResponse, error) {
+	out := new(GetPreferenceResponse)
+	err := c.cc.Invoke(ctx, VM_GetPreference_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -454,6 +466,8 @@ type VMServer interface {
 	GetBlock(context.Context, *GetBlockRequest) (*GetBlockResponse, error)
 	// Notify the VM of the currently preferred block.
 	SetPreference(context.Context, *SetPreferenceRequest) (*emptypb.Empty, error)
+	// Retrieve the currently preferred block from the VM.
+	GetPreference(context.Context, *emptypb.Empty) (*GetPreferenceResponse, error)
 	// Attempt to verify the health of the VM.
 	Health(context.Context, *emptypb.Empty) (*HealthResponse, error)
 	// Version returns the version of the VM.
@@ -534,6 +548,9 @@ func (UnimplementedVMServer) GetBlock(context.Context, *GetBlockRequest) (*GetBl
 }
 func (UnimplementedVMServer) SetPreference(context.Context, *SetPreferenceRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetPreference not implemented")
+}
+func (UnimplementedVMServer) GetPreference(context.Context, *emptypb.Empty) (*GetPreferenceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetPreference not implemented")
 }
 func (UnimplementedVMServer) Health(context.Context, *emptypb.Empty) (*HealthResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Health not implemented")
@@ -793,6 +810,24 @@ func _VM_SetPreference_Handler(srv interface{}, ctx context.Context, dec func(in
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(VMServer).SetPreference(ctx, req.(*SetPreferenceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _VM_GetPreference_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VMServer).GetPreference(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: VM_GetPreference_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VMServer).GetPreference(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1257,6 +1292,10 @@ var VM_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetPreference",
 			Handler:    _VM_SetPreference_Handler,
+		},
+		{
+			MethodName: "GetPreference",
+			Handler:    _VM_GetPreference_Handler,
 		},
 		{
 			MethodName: "Health",

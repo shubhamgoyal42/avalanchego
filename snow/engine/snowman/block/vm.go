@@ -49,6 +49,12 @@ type ChainVM interface {
 	// This should always be a block that has no children known to consensus.
 	SetPreference(ctx context.Context, blkID ids.ID) error
 
+	// GetPreference returns the ID of the currently preferred block.
+	// If no blocks have been accepted/preferred by consensus yet, it is
+	// assumed there is a definitionally accepted block, the Genesis block, that
+	// will be returned.
+	GetPreference(context.Context) (ids.ID, error)
+
 	// LastAccepted returns the ID of the last accepted block.
 	//
 	// If no blocks have been accepted by consensus yet, it is assumed there is

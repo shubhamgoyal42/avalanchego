@@ -465,6 +465,14 @@ func (vm *VMServer) SetPreference(ctx context.Context, req *vmpb.SetPreferenceRe
 	return &emptypb.Empty{}, vm.vm.SetPreference(ctx, id)
 }
 
+func (vm *VMServer) GetPreference(ctx context.Context, _ *emptypb.Empty) (*vmpb.GetPreferenceResponse, error) {
+	blkID, err := vm.vm.GetPreference(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &vmpb.GetPreferenceResponse{BlkId: blkID[:]}, nil
+}
+
 func (vm *VMServer) Health(ctx context.Context, _ *emptypb.Empty) (*vmpb.HealthResponse, error) {
 	vmHealth, err := vm.vm.HealthCheck(ctx)
 	if err != nil {
