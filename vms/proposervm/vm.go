@@ -361,6 +361,10 @@ func (vm *VM) SetPreference(ctx context.Context, preferred ids.ID) error {
 	return nil
 }
 
+func (vm *VM) GetPreference(ctx context.Context) (ids.ID, error) {
+	return vm.preferred, nil
+}
+
 func (vm *VM) getPreDurangoSlotTime(
 	ctx context.Context,
 	blkHeight,
