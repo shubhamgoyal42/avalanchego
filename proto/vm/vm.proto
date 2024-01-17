@@ -58,7 +58,6 @@ service VM {
   rpc BatchedParseBlock(BatchedParseBlockRequest) returns (BatchedParseBlockResponse);
 
   // HeightIndexedChainVM
-  rpc VerifyHeightIndex(google.protobuf.Empty) returns (VerifyHeightIndexResponse);
   rpc GetBlockIDAtHeight(GetBlockIDAtHeightRequest) returns (GetBlockIDAtHeightResponse);
 
   // StateSyncableVM
@@ -338,10 +337,6 @@ message BatchedParseBlockRequest {
 
 message BatchedParseBlockResponse {
   repeated ParseBlockResponse response = 1;
-}
-
-message VerifyHeightIndexResponse {
-  Error err = 1;
 }
 
 message GetBlockIDAtHeightRequest {

@@ -28,7 +28,6 @@ import (
 	"github.com/ava-labs/avalanchego/utils/math"
 	"github.com/ava-labs/avalanchego/utils/timer/mockable"
 	"github.com/ava-labs/avalanchego/utils/units"
-	"github.com/ava-labs/avalanchego/vms/proposervm/indexer"
 	"github.com/ava-labs/avalanchego/vms/proposervm/proposer"
 	"github.com/ava-labs/avalanchego/vms/proposervm/scheduler"
 	"github.com/ava-labs/avalanchego/vms/proposervm/state"
@@ -75,7 +74,6 @@ type VM struct {
 	ssVM           block.StateSyncableVM
 
 	state.State
-	hIndexer indexer.HeightIndexer
 
 	proposer.Windower
 	tree.Tree
@@ -177,10 +175,6 @@ func (vm *VM) Initialize(
 	}
 	vm.innerBlkCache = innerBlkCache
 
-	indexerDB := versiondb.New(vm.db)
-	indexerState := state.New(indexerDB)
-	vm.hIndexer = indexer.NewHeightIndexer(vm, vm.ctx.Log, indexerState)
-
 	scheduler, vmToEngine := scheduler.New(vm.ctx.Log, toEngine)
 	vm.Scheduler = scheduler
 	vm.toScheduler = vmToEngine
@@ -210,7 +204,7 @@ func (vm *VM) Initialize(
 		return err
 	}
 
-	if err := vm.repair(detachedCtx); err != nil {
+	if err := vm.repairAcceptedChainByHeight(ctx); err != nil {
 		return err
 	}
 
@@ -912,7 +906,7 @@ func (vm *VM) acceptPostForkBlock(blk PostForkBlock) error {
 	if err := vm.State.PutBlock(blk.getStatelessBlk(), choices.Accepted); err != nil {
 		return err
 	}
-	if err := vm.updateHeightIndex(height, blkID); err != nil {
+	if err := vm.storeHeightEntry(height, blkID); err != nil {
 		return err
 	}
 	return vm.db.Commit()

@@ -50,7 +50,6 @@ type blockVM struct {
 	getAncestorsTag      string
 	batchedParseBlockTag string
 	// HeightIndexedChainVM tags
-	verifyHeightIndexTag  string
 	getBlockIDAtHeightTag string
 	// StateSyncableVM tags
 	stateSyncEnabledTag           string
@@ -174,13 +173,6 @@ func (vm *blockVM) LastAccepted(ctx context.Context) (ids.ID, error) {
 	defer span.End()
 
 	return vm.ChainVM.LastAccepted(ctx)
-}
-
-func (vm *blockVM) VerifyHeightIndex(ctx context.Context) error {
-	ctx, span := vm.tracer.Start(ctx, vm.verifyHeightIndexTag)
-	defer span.End()
-
-	return vm.ChainVM.VerifyHeightIndex(ctx)
 }
 
 func (vm *blockVM) GetBlockIDAtHeight(ctx context.Context, height uint64) (ids.ID, error) {
