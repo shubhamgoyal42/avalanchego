@@ -299,7 +299,18 @@ func (vm *VM) GetBlock(ctx context.Context, id ids.ID) (snowman.Block, error) {
 }
 
 func (vm *VM) persistPreference(preferred ids.ID) error {
-	// TODO
+	// Get the corresponding preferred block and iterate back to the last accepted block
+	// writing the entire preferred chain to disk if they have not already been persisted
+	// as a preferred block
+
+	// Write the latest preferredID to the database
+
+	// TODO: remove blocks from this database on Accept/Reject and during Initialize
+	// to make sure anything that does not remain in the preferred chain is removed.
+
+	// TODO: provide handling for the case that a previously preferred block is not
+	// valid after restart (chain config flag to override?)
+	// TODO: update repair to make sure that the preference of the innerVM is handled correctly
 	return nil
 }
 
@@ -433,22 +444,6 @@ func (vm *VM) LastAccepted(ctx context.Context) (ids.ID, error) {
 	return lastAccepted, err
 }
 
-func (vm *VM) persistPreference(preferred ids.ID) error {
-	// Get the corresponding preferred block and iterate back to the last accepted block
-	// writing the entire preferred chain to disk if they have not already been persisted
-	// as a preferred block
-
-	// Write the latest preferredID to the database
-
-	// TODO: remove blocks from this database on Accept/Reject and during Initialize
-	// to make sure anything that does not remain in the preferred chain is removed.
-
-	// TODO: provide handling for the case that a previously preferred block is not
-	// valid after restart (chain config flag to override?)
-	// TODO: update repair to make sure that the preference of the innerVM is handled correctly
-	return nil
-}
-
 func (vm *VM) rollForwardInnerVMAcceptedBlock(ctx context.Context) error {
 	innerLastAcceptedID, err := vm.ChainVM.LastAccepted(ctx)
 	if err != nil {
@@ -497,6 +492,14 @@ func (vm *VM) rollForwardInnerVMAcceptedBlock(ctx context.Context) error {
 		}
 	}
 
+	return nil
+}
+
+func (vm *VM) rollInnerVMPreferenceForward(ctx context.Context) error {
+	// Get the persisted preference of the ProposerVM
+	// assume the last accepted blocks are aligned
+	// for loop from last accepted block of ProposerVM to preferred tip
+	// call Verify on the outer block in order
 	return nil
 }
 
