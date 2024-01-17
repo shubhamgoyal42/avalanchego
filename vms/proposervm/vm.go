@@ -298,11 +298,19 @@ func (vm *VM) GetBlock(ctx context.Context, id ids.ID) (snowman.Block, error) {
 	return vm.getBlock(ctx, id)
 }
 
+func (vm *VM) persistPreference(preferred ids.ID) error {
+	// TODO
+	return nil
+}
+
 func (vm *VM) SetPreference(ctx context.Context, preferred ids.ID) error {
 	if vm.preferred == preferred {
 		return nil
 	}
 	vm.preferred = preferred
+	if err := vm.persistPreference(preferred); err != nil {
+		return err
+	}
 
 	blk, err := vm.getPostForkBlock(ctx, preferred)
 	if err != nil {
