@@ -202,7 +202,7 @@ func (vm *VM) Initialize(
 		return err
 	}
 
-	if err := vm.repairAcceptedChainByHeight(ctx); err != nil {
+	if err := vm.rollInnerVMAcceptedBlockForward(ctx); err != nil {
 		return err
 	}
 
@@ -255,11 +255,11 @@ func (vm *VM) SetState(ctx context.Context, newState snow.State) error {
 		return nil
 	}
 
-	// When finishing StateSyncing, if state sync has failed or was skipped,
-	// repairAcceptedChainByHeight rolls back the chain to the previously last
-	// accepted block. If state sync has completed successfully, this call is a
-	// no-op.
-	if err := vm.repairAcceptedChainByHeight(ctx); err != nil {
+	// When finishing state syncing, there are three possible cases:
+	// - failed -> fatal
+	// - skipped -> rollInnerVMAcceptedBlockForward rolls the innerVM forward to match outerVM
+	// - success -> this call is a no-op since the preference and accepted block are already in sync
+	if err := vm.rollInnerVMAcceptedBlockForward(ctx); err != nil {
 		return err
 	}
 	return vm.setLastAcceptedMetadata(ctx)
@@ -668,67 +668,70 @@ func (vm *VM) repairAcceptedChainByHeight(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	innerLastAccepted, err := vm.ChainVM.GetBlock(ctx, innerLastAcceptedID)
-	if err != nil {
-		return err
-	}
-	proLastAcceptedID, err := vm.State.GetLastAccepted()
-	if err == database.ErrNotFound {
-		// If the last accepted block isn't indexed yet, then the underlying
-		// chain is the only chain and there is nothing to repair.
-		return nil
-	}
-	if err != nil {
-		return err
-	}
-	proLastAccepted, err := vm.getPostForkBlock(ctx, proLastAcceptedID)
+	innerLastAcceptedBlock, err := vm.ChainVM.GetBlock(ctx, innerLastAcceptedID)
 	if err != nil {
 		return err
 	}
 
-	proLastAcceptedHeight := proLastAccepted.Height()
-	innerLastAcceptedHeight := innerLastAccepted.Height()
-	if proLastAcceptedHeight < innerLastAcceptedHeight {
-		return fmt.Errorf("proposervm height index (%d) should never be lower than the inner height index (%d)", proLastAcceptedHeight, innerLastAcceptedHeight)
+	outerLastAcceptedID, err := vm.State.GetLastAccepted()
+	if err != nil {
+		return err
 	}
-	if proLastAcceptedHeight == innerLastAcceptedHeight {
-		// There is nothing to repair - as the heights match
-		return nil
-	}
-
-	vm.ctx.Log.Info("repairing accepted chain by height",
-		zap.Uint64("outerHeight", proLastAcceptedHeight),
-		zap.Uint64("innerHeight", innerLastAcceptedHeight),
-	)
-
-	// The inner vm must be behind the proposer vm, so we must roll the
-	// proposervm back.
-	forkHeight, err := vm.State.GetForkHeight()
+	outerLastAcceptedBlock, err := vm.getPostForkBlock(ctx, outerLastAcceptedID)
 	if err != nil {
 		return err
 	}
 
-	if forkHeight > innerLastAcceptedHeight {
-		// We are rolling back past the fork, so we should just forget about all
-		// of our proposervm indices.
-		if err := vm.State.DeleteLastAccepted(); err != nil {
+	if outerLastAcceptedBlock.Height() < innerLastAcceptedBlock.Height() {
+		return fmt.Errorf("proposervm last accepted block (%d, %s) should never be lower than inner VM last accepted block (%d, %s)",
+			outerLastAcceptedBlock.Height(),
+			outerLastAcceptedID,
+			innerLastAcceptedBlock.Height(),
+			innerLastAcceptedID,
+		)
+	}
+
+	outerPreferredBlkID, err := vm.GetPreference(ctx) // FIXME: ensure this grabs the right preference during Initialize
+	if err != nil {
+		return err
+	}
+	outerPreferredBlock, err := vm.getPostForkBlock(ctx, outerPreferredBlkID)
+	if err != nil {
+		return err
+	}
+	if outerPreferredBlock.Height() < outerLastAcceptedBlock.Height() {
+		return fmt.Errorf("outer preferred block (%d, %s) should never be less than outer last accepted block (%d, %s)",
+			outerPreferredBlock.Height(),
+			outerPreferredBlkID,
+			outerLastAcceptedBlock.Height(),
+			outerLastAcceptedID,
+		)
+	}
+
+	for innerHeight := innerLastAcceptedBlock.Height() + 1; innerHeight <= outerPreferredBlock.Height(); innerHeight++ {
+		outerBlkID, err := vm.State.GetBlockIDAtHeight(innerHeight)
+		if err != nil {
 			return err
 		}
-		return vm.db.Commit()
+		outerBlk, err := vm.getPostForkBlock(ctx, outerBlkID)
+		if err != nil {
+			return err
+		}
+
+		innerBlock := outerBlk.getInnerBlk()
+		if err := innerBlock.Verify(ctx); err != nil {
+			return err
+		}
+
+		if innerHeight > outerLastAcceptedBlock.Height() {
+			continue
+		}
+		if err := innerBlock.Accept(ctx); err != nil {
+			return err
+		}
 	}
 
-	newProLastAcceptedID, err := vm.State.GetBlockIDAtHeight(innerLastAcceptedHeight)
-	if err != nil {
-		// This fatal error can happen if NumHistoricalBlocks is set too
-		// aggressively and the inner vm rolled back before the oldest
-		// proposervm block.
-		return fmt.Errorf("proposervm failed to rollback last accepted block to height (%d): %w", innerLastAcceptedHeight, err)
-	}
-
-	if err := vm.State.SetLastAccepted(newProLastAcceptedID); err != nil {
-		return err
-	}
-	return vm.db.Commit()
+	return nil
 }
 
 func (vm *VM) setLastAcceptedMetadata(ctx context.Context) error {
