@@ -58,8 +58,6 @@ var (
 	fujiXChainID    = ids.FromStringOrPanic("2JVSBoinj9C2J33VntvzYtVJNZdN2NKiwwKjcumHUWEb5DbBrm")
 
 	dbPrefix = []byte("proposervm")
-
-	errHeightIndexInvalidWhilePruning = errors.New("height index invalid while pruning old blocks")
 )
 
 func cachedBlockSize(_ ids.ID, blk snowman.Block) int {
