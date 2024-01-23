@@ -8,7 +8,6 @@ import (
 	"github.com/ava-labs/avalanchego/database/prefixdb"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/snow/choices"
-	"github.com/ava-labs/avalanchego/vms/proposervm/block"
 )
 
 var (
@@ -18,7 +17,7 @@ var (
 )
 
 type VerifiedIndex interface {
-	PutVerifiedBlock(block block.Block) error
+	PutVerifiedBlock(blkID ids.ID) error
 	PutPreference(preferredID ids.ID) error
 }
 

@@ -18,7 +18,8 @@ func TestState(t *testing.T) {
 
 	db := memdb.New()
 	vdb := versiondb.New(db)
-	s := New(vdb)
+	s, err := New(vdb)
+	a.NoError(err)
 
 	testBlockState(a, s)
 	testChainState(a, s)

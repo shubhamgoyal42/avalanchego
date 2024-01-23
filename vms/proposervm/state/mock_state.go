@@ -173,6 +173,34 @@ func (mr *MockStateMockRecorder) PutBlock(arg0, arg1 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PutBlock", reflect.TypeOf((*MockState)(nil).PutBlock), arg0, arg1)
 }
 
+// PutPreference mocks base method.
+func (m *MockState) PutPreference(arg0 ids.ID) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PutPreference", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// PutPreference indicates an expected call of PutPreference.
+func (mr *MockStateMockRecorder) PutPreference(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PutPreference", reflect.TypeOf((*MockState)(nil).PutPreference), arg0)
+}
+
+// PutVerifiedBlock mocks base method.
+func (m *MockState) PutVerifiedBlock(arg0 ids.ID) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PutVerifiedBlock", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// PutVerifiedBlock indicates an expected call of PutVerifiedBlock.
+func (mr *MockStateMockRecorder) PutVerifiedBlock(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PutVerifiedBlock", reflect.TypeOf((*MockState)(nil).PutVerifiedBlock), arg0)
+}
+
 // SetBlockIDAtHeight mocks base method.
 func (m *MockState) SetBlockIDAtHeight(arg0 uint64, arg1 ids.ID) error {
 	m.ctrl.T.Helper()
