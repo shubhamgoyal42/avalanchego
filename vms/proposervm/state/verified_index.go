@@ -18,6 +18,7 @@ var (
 
 type VerifiedIndex interface {
 	PutVerifiedBlock(blkID ids.ID) error
+	DeleteVerifiedBlock(blkID ids.ID) error
 	PutPreference(preferredID ids.ID) error
 }
 
@@ -77,6 +78,10 @@ func NewVerifiedIndex(db database.Database, blkState BlockState) (*verifiedIndex
 
 func (v *verifiedIndex) PutVerifiedBlock(blkID ids.ID) error {
 	return v.verifiedBlkIDsDB.Put(blkID[:], nil)
+}
+
+func (v *verifiedIndex) DeleteVerifiedBlock(blkID ids.ID) error {
+	return v.verifiedBlkIDsDB.Delete(blkID[:])
 }
 
 func (v *verifiedIndex) PutPreference(preferredID ids.ID) error {

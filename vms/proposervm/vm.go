@@ -891,6 +891,9 @@ func (vm *VM) acceptPostForkBlock(blk PostForkBlock) error {
 	if err := vm.State.PutBlock(blk.getStatelessBlk(), choices.Accepted); err != nil {
 		return err
 	}
+	if err := vm.State.DeleteVerifiedBlock(blkID); err != nil {
+		return err
+	}
 	if err := vm.updateHeightIndex(height, blkID); err != nil {
 		return err
 	}

@@ -83,6 +83,20 @@ func (mr *MockStateMockRecorder) DeleteLastAccepted() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteLastAccepted", reflect.TypeOf((*MockState)(nil).DeleteLastAccepted))
 }
 
+// DeleteVerifiedBlock mocks base method.
+func (m *MockState) DeleteVerifiedBlock(arg0 ids.ID) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteVerifiedBlock", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteVerifiedBlock indicates an expected call of DeleteVerifiedBlock.
+func (mr *MockStateMockRecorder) DeleteVerifiedBlock(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteVerifiedBlock", reflect.TypeOf((*MockState)(nil).DeleteVerifiedBlock), arg0)
+}
+
 // GetBlock mocks base method.
 func (m *MockState) GetBlock(arg0 ids.ID) (block.Block, choices.Status, error) {
 	m.ctrl.T.Helper()
