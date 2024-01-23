@@ -177,7 +177,7 @@ func TestStateSyncGetOngoingSyncStateSummary(t *testing.T) {
 	}
 
 	slb, err := statelessblock.Build(
-		vm.preferred,
+		vm.State.Preferred(),
 		innerBlk.Timestamp(),
 		100, // pChainHeight,
 		vm.StakingCertLeaf,
@@ -261,7 +261,7 @@ func TestStateSyncGetLastStateSummary(t *testing.T) {
 	}
 
 	slb, err := statelessblock.Build(
-		vm.preferred,
+		vm.State.Preferred(),
 		innerBlk.Timestamp(),
 		100, // pChainHeight,
 		vm.StakingCertLeaf,
@@ -348,7 +348,7 @@ func TestStateSyncGetStateSummary(t *testing.T) {
 	}
 
 	slb, err := statelessblock.Build(
-		vm.preferred,
+		vm.State.Preferred(),
 		innerBlk.Timestamp(),
 		100, // pChainHeight,
 		vm.StakingCertLeaf,
@@ -420,7 +420,7 @@ func TestParseStateSummary(t *testing.T) {
 	}
 
 	slb, err := statelessblock.Build(
-		vm.preferred,
+		vm.State.Preferred(),
 		innerBlk.Timestamp(),
 		100, // pChainHeight,
 		vm.StakingCertLeaf,
@@ -474,7 +474,7 @@ func TestStateSummaryAccept(t *testing.T) {
 	}
 
 	slb, err := statelessblock.Build(
-		vm.preferred,
+		vm.State.Preferred(),
 		innerBlk.Timestamp(),
 		100, // pChainHeight,
 		vm.StakingCertLeaf,
@@ -553,7 +553,7 @@ func TestStateSummaryAcceptOlderBlock(t *testing.T) {
 	}
 
 	slb, err := statelessblock.Build(
-		vm.preferred,
+		vm.State.Preferred(),
 		innerBlk.Timestamp(),
 		100, // pChainHeight,
 		vm.StakingCertLeaf,

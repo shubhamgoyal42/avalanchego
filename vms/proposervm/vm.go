@@ -91,7 +91,6 @@ type VM struct {
 	// filled with random blocks every time this node parses blocks while
 	// processing a GetAncestors message from a bootstrapping node.
 	innerBlkCache  cache.Cacher[ids.ID, snowman.Block]
-	preferred      ids.ID
 	consensusState snow.State
 	context        context.Context
 	onShutdown     func()
@@ -266,11 +265,11 @@ func (vm *VM) SetState(ctx context.Context, newState snow.State) error {
 }
 
 func (vm *VM) BuildBlock(ctx context.Context) (snowman.Block, error) {
-	preferredBlock, err := vm.getBlock(ctx, vm.preferred)
+	preferredBlock, err := vm.getBlock(ctx, vm.State.Preferred())
 	if err != nil {
 		vm.ctx.Log.Error("unexpected build block failure",
 			zap.String("reason", "failed to fetch preferred block"),
-			zap.Stringer("parentID", vm.preferred),
+			zap.Stringer("parentID", vm.State.Preferred()),
 			zap.Error(err),
 		)
 		return nil, err
@@ -291,10 +290,12 @@ func (vm *VM) GetBlock(ctx context.Context, id ids.ID) (snowman.Block, error) {
 }
 
 func (vm *VM) SetPreference(ctx context.Context, preferred ids.ID) error {
-	if vm.preferred == preferred {
+	if vm.State.Preferred() == preferred {
 		return nil
 	}
-	vm.preferred = preferred
+	if err := vm.State.SetPreference(preferred); err != nil {
+		return err
+	}
 
 	blk, err := vm.getPostForkBlock(ctx, preferred)
 	if err != nil {
@@ -343,9 +344,6 @@ func (vm *VM) SetPreference(ctx context.Context, preferred ids.ID) error {
 		// until the P-chain's height has advanced.
 		return nil
 	}
-	if err := vm.State.PutPreference(preferred); err != nil {
-		return err
-	}
 	vm.Scheduler.SetBuildBlockTime(nextStartTime)
 
 	vm.ctx.Log.Debug("set preference",
@@ -357,7 +355,12 @@ func (vm *VM) SetPreference(ctx context.Context, preferred ids.ID) error {
 }
 
 func (vm *VM) GetPreference(ctx context.Context) (ids.ID, error) {
-	return vm.preferred, nil
+	preferred := vm.State.Preferred()
+	if preferred == ids.Empty {
+		return vm.ChainVM.GetPreference(ctx) // TODO: make sure each VM implementation sets preference to genesis block if nothing has been accepted
+	}
+
+	return vm.State.Preferred(), nil
 }
 
 func (vm *VM) getPreDurangoSlotTime(
@@ -675,24 +678,7 @@ func (vm *VM) repairAcceptedChainByHeight(ctx context.Context) error {
 		)
 	}
 
-	outerPreferredBlkID, err := vm.GetPreference(ctx) // FIXME: ensure this grabs the right preference during Initialize
-	if err != nil {
-		return err
-	}
-	outerPreferredBlock, err := vm.getPostForkBlock(ctx, outerPreferredBlkID)
-	if err != nil {
-		return err
-	}
-	if outerPreferredBlock.Height() < outerLastAcceptedBlock.Height() {
-		return fmt.Errorf("outer preferred block (%d, %s) should never be less than outer last accepted block (%d, %s)",
-			outerPreferredBlock.Height(),
-			outerPreferredBlkID,
-			outerLastAcceptedBlock.Height(),
-			outerLastAcceptedID,
-		)
-	}
-
-	for innerHeight := innerLastAcceptedBlock.Height() + 1; innerHeight <= outerPreferredBlock.Height(); innerHeight++ {
+	for innerHeight := innerLastAcceptedBlock.Height() + 1; innerHeight <= outerLastAcceptedBlock.Height(); innerHeight++ {
 		outerBlkID, err := vm.State.GetBlockIDAtHeight(innerHeight)
 		if err != nil {
 			return err
@@ -705,10 +691,6 @@ func (vm *VM) repairAcceptedChainByHeight(ctx context.Context) error {
 		innerBlock := outerBlk.getInnerBlk()
 		if err := innerBlock.Verify(ctx); err != nil {
 			return err
-		}
-
-		if innerHeight > outerLastAcceptedBlock.Height() {
-			continue
 		}
 		if err := innerBlock.Accept(ctx); err != nil {
 			return err

@@ -11,43 +11,38 @@ import (
 )
 
 var (
-	chainStatePrefix    = []byte("chain")
-	blockStatePrefix    = []byte("block")
-	heightIndexPrefix   = []byte("height")
-	verifiedIndexPrefix = []byte("verified")
+	chainStatePrefix  = []byte("chain")
+	blockStatePrefix  = []byte("block")
+	heightIndexPrefix = []byte("height")
 )
 
 type State interface {
 	ChainState
 	BlockState
 	HeightIndex
-	VerifiedIndex
 }
 
 type state struct {
 	ChainState
 	BlockState
 	HeightIndex
-	VerifiedIndex
 }
 
 func New(db *versiondb.Database) (State, error) {
 	chainDB := prefixdb.New(chainStatePrefix, db)
 	blockDB := prefixdb.New(blockStatePrefix, db)
 	heightDB := prefixdb.New(heightIndexPrefix, db)
-	verifiedDB := prefixdb.New(verifiedIndexPrefix, db)
 
 	blockState := NewBlockState(blockDB)
-	verifiedIndex, err := NewVerifiedIndex(verifiedDB, blockState)
+	chainState, err := NewChainState(chainDB, blockState)
 	if err != nil {
 		return nil, err
 	}
 
 	return &state{
-		ChainState:    NewChainState(chainDB),
-		BlockState:    blockState,
-		HeightIndex:   NewHeightIndex(heightDB, db),
-		VerifiedIndex: verifiedIndex,
+		ChainState:  chainState,
+		BlockState:  blockState,
+		HeightIndex: NewHeightIndex(heightDB, db),
 	}, nil
 }
 
@@ -55,21 +50,19 @@ func NewMetered(db *versiondb.Database, namespace string, metrics prometheus.Reg
 	chainDB := prefixdb.New(chainStatePrefix, db)
 	blockDB := prefixdb.New(blockStatePrefix, db)
 	heightDB := prefixdb.New(heightIndexPrefix, db)
-	verifiedDB := prefixdb.New(verifiedIndexPrefix, db)
 
 	blockState, err := NewMeteredBlockState(blockDB, namespace, metrics)
 	if err != nil {
 		return nil, err
 	}
-	verifiedIndex, err := NewVerifiedIndex(verifiedDB, blockState)
+	chainState, err := NewChainState(chainDB, blockState)
 	if err != nil {
 		return nil, err
 	}
 
 	return &state{
-		ChainState:    NewChainState(chainDB),
-		BlockState:    blockState,
-		HeightIndex:   NewHeightIndex(heightDB, db),
-		VerifiedIndex: verifiedIndex,
+		ChainState:  chainState,
+		BlockState:  blockState,
+		HeightIndex: NewHeightIndex(heightDB, db),
 	}, nil
 }
