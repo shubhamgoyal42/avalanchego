@@ -244,7 +244,7 @@ func (m *MockLinearizableVM) GetPreference(arg0 context.Context) (ids.ID, error)
 }
 
 // GetPreference indicates an expected call of GetPreference.
-func (mr *MockLinearizableVMMockRecorder) GetPreference(arg0 interface{}) *gomock.Call {
+func (mr *MockLinearizableVMMockRecorder) GetPreference(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPreference", reflect.TypeOf((*MockLinearizableVM)(nil).GetPreference), arg0)
 }
