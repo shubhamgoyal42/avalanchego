@@ -362,6 +362,9 @@ func (vm *VM) SetPreference(ctx context.Context, preferred ids.ID) error {
 		// until the P-chain's height has advanced.
 		return nil
 	}
+	if err := vm.State.PutPreference(preferred); err != nil {
+		return err
+	}
 	vm.Scheduler.SetBuildBlockTime(nextStartTime)
 
 	vm.ctx.Log.Debug("set preference",
