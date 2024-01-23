@@ -5,50 +5,67 @@ package state
 
 import (
 	"github.com/ava-labs/avalanchego/database"
+	"github.com/ava-labs/avalanchego/database/prefixdb"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/snow/choices"
 	"github.com/ava-labs/avalanchego/vms/proposervm/block"
 )
 
+var (
+	verifiedPrefix          = []byte("verified")
+	preferredMetadataPrefix = []byte("preferred_metadata")
+	preferredKey            = []byte("preferred")
+)
+
 type VerifiedIndex interface {
 	PutVerifiedBlock(block block.Block) error
+	PutPreference(preferredID ids.ID) error
 }
 
 type verifiedIndex struct {
-	db database.Database
+	verifiedBlkIDsDB database.Database
+	metadataDB       database.Database
 }
 
-func NewVerifiedIndex(db database.Database, blkState BlockState, preferenceID ids.ID) (*verifiedIndex, error) {
-	preferredBlkIDs := make(map[string]struct{})
-	_, err := db.Get(preferenceID[:])
+func NewVerifiedIndex(db database.Database, blkState BlockState) (*verifiedIndex, error) {
+	v := &verifiedIndex{
+		verifiedBlkIDsDB: prefixdb.New(verifiedPrefix, db),
+		metadataDB:       prefixdb.New(preferredMetadataPrefix, db),
+	}
+
+	preferredID, err := v.metadataDB.Get(preferredKey)
 	switch {
 	case err != nil && err != database.ErrNotFound:
 		return nil, err
 	case err == database.ErrNotFound:
-	default:
-		preferredBlk, status, err := blkState.GetBlock(preferenceID)
+		return v, nil
+	}
+
+	// Add the preferred chain up to the last accepted block to be skipped.
+	preferredBlkIDs := make(map[string]struct{})
+	preferredBlk, status, err := blkState.GetBlock(ids.ID(preferredID))
+	if err != nil {
+		return nil, err
+	}
+	for status != choices.Accepted {
+		preferredID := preferredBlk.ID()
+		preferredBlkIDs[string(preferredID[:])] = struct{}{}
+
+		preferredBlk, status, err = blkState.GetBlock(preferredBlk.ParentID())
 		if err != nil {
 			return nil, err
 		}
-		for status != choices.Accepted {
-			preferredID := preferredBlk.ID()
-			preferredBlkIDs[string(preferredID[:])] = struct{}{}
-
-			preferredBlk, status, err = blkState.GetBlock(preferredBlk.ParentID())
-			if err != nil {
-				return nil, err
-			}
-		}
 	}
 
-	iter := db.NewIterator()
+	// Delete any verified blocks that are not in the preferred chain.
+	iter := v.verifiedBlkIDsDB.NewIterator()
 	defer iter.Release()
 
 	for iter.Next() {
 		if _, ok := preferredBlkIDs[string(iter.Key())]; ok {
 			continue
 		}
-		if err := db.Delete(iter.Key()); err != nil {
+		if err := v.verifiedBlkIDsDB.Delete(iter.Key()); err != nil {
 			return nil, err
 		}
 	}
@@ -56,10 +73,13 @@ func NewVerifiedIndex(db database.Database, blkState BlockState, preferenceID id
 		return nil, err
 	}
 
-	return &verifiedIndex{db: db}, nil
+	return v, nil
 }
 
-func (v *verifiedIndex) PutVerifiedBlock(block block.Block) error {
-	blkID := block.ID()
-	return v.db.Put(blkID[:], nil)
+func (v *verifiedIndex) PutVerifiedBlock(blkID ids.ID) error {
+	return v.verifiedBlkIDsDB.Put(blkID[:], nil)
+}
+
+func (v *verifiedIndex) PutPreference(preferredID ids.ID) error {
+	return v.metadataDB.Put(preferredKey, preferredID[:])
 }
