@@ -457,52 +457,78 @@ func (t *Transitive) Context() *snow.ConsensusContext {
 
 func (t *Transitive) Start(ctx context.Context, startReqID uint32) error {
 	t.requestID = startReqID
-	lastAcceptedID, err := t.VM.LastAccepted(ctx)
+	preferredID, err := t.VM.GetPreference(ctx)
 	if err != nil {
 		return err
 	}
+	preferredBlock, err := t.VM.GetBlock(ctx, preferredID)
+	if err != nil {
+		return err
+	}
+	preferredChain := make([]snowman.Block, 0, 1)
+	for preferredBlock.Status() != choices.Accepted {
+		preferredChain = append(preferredChain, preferredBlock)
 
-	lastAccepted, err := t.getBlock(ctx, lastAcceptedID)
-	if err != nil {
-		t.Ctx.Log.Error("failed to get last accepted block",
-			zap.Error(err),
-		)
-		return err
+		preferredBlock, err = t.VM.GetBlock(ctx, preferredBlock.Parent())
+		if err != nil {
+			return err
+		}
 	}
+	lastAccepted := preferredBlock
+	lastAcceptedID := lastAccepted.ID()
+	preferredChain = append(preferredChain, lastAccepted)
 
 	// initialize consensus to the last accepted blockID
 	if err := t.Consensus.Initialize(t.Ctx, t.Params, lastAcceptedID, lastAccepted.Height(), lastAccepted.Timestamp()); err != nil {
 		return err
 	}
 
-	// to maintain the invariant that oracle blocks are issued in the correct
-	// preferences, we need to handle the case that we are bootstrapping into an oracle block
-	if oracleBlk, ok := lastAccepted.(snowman.OracleBlock); ok {
-		options, err := oracleBlk.Options(ctx)
-		switch {
-		case err == snowman.ErrNotOracle:
-			// if there aren't blocks we need to deliver on startup, we need to set
-			// the preference to the last accepted block
-			if err := t.VM.SetPreference(ctx, lastAcceptedID); err != nil {
+	issuedMetric := t.metrics.issued.WithLabelValues(builtSource)
+	for len(preferredChain) > 0 {
+		block := preferredChain[len(preferredChain)-1]
+		preferredChain = preferredChain[:len(preferredChain)-1]
+
+		// If I'm in the preferred chain and am not the last accepted block, then I need to
+		// be delivered to insert into consensus.
+		if block.Status() != choices.Accepted {
+			if err := t.deliver(ctx, t.Ctx.NodeID, block, false, issuedMetric); err != nil {
 				return err
 			}
-		case err != nil:
-			return err
-		default:
-			issuedMetric := t.metrics.issued.WithLabelValues(builtSource)
-			for _, blk := range options {
-				// note that deliver will set the VM's preference
-				if err := t.deliver(ctx, t.Ctx.NodeID, blk, false, issuedMetric); err != nil {
-					return err
+		}
+
+		// to maintain the invariant that oracle blocks are issued in the correct
+		// preferences, we need to handle the case that we are inserting an oracle block.
+		if oracleBlk, ok := block.(snowman.OracleBlock); ok {
+			options, err := oracleBlk.Options(ctx)
+			switch {
+			case err == snowman.ErrNotOracle:
+				// If I turn out to not be an option block, then continue
+				// inserting the remaining preferred children.
+			case err != nil:
+				return err
+			default:
+				for _, blk := range options {
+					// note that deliver will set the VM's preference
+					if err := t.deliver(ctx, t.Ctx.NodeID, blk, false, issuedMetric); err != nil {
+						return err
+					}
+				}
+				// to ensure we do not insert the same block twice, we must drop the next block from
+				// the preferred chain, which is guaranteed to be one of the already delviered options.
+				if len(preferredChain) > 0 {
+					preferredChain = preferredChain[:len(preferredChain)-1]
 				}
 			}
 		}
-	} else if err := t.VM.SetPreference(ctx, lastAcceptedID); err != nil {
+	}
+
+	if err := t.VM.SetPreference(ctx, preferredID); err != nil {
 		return err
 	}
 
 	t.Ctx.Log.Info("consensus starting",
 		zap.Stringer("lastAcceptedBlock", lastAcceptedID),
+		zap.Stringer("preferredBlock", preferredID),
 	)
 	t.metrics.bootstrapFinished.Set(1)
 
