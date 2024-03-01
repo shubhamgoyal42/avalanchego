@@ -450,10 +450,6 @@ func (vm *VM) SetPreference(_ context.Context, blkID ids.ID) error {
 	return nil
 }
 
-func (vm *VM) GetPreference(_ context.Context) (ids.ID, error) {
-	return vm.manager.Preferred(), nil
-}
-
 func (*VM) Version(context.Context) (string, error) {
 	return version.Current.String(), nil
 }

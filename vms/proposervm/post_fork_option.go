@@ -54,9 +54,14 @@ func (b *postForkOption) acceptInnerBlk(ctx context.Context) error {
 func (b *postForkOption) Reject(context.Context) error {
 	// we do not reject the inner block here because that block may be contained
 	// in the proposer block that causing this block to be rejected.
+
 	delete(b.vm.verifiedBlocks, b.ID())
 	b.status = choices.Rejected
-	return b.vm.State.DeleteVerifiedBlock(b.ID())
+	if err := b.vm.State.DeleteVerifiedBlock(b.ID()); err != nil {
+		return err
+	}
+
+	return b.vm.State.DeleteBlock(b.ID())
 }
 
 func (b *postForkOption) Status() choices.Status {

@@ -457,10 +457,7 @@ func (t *Transitive) Context() *snow.ConsensusContext {
 
 func (t *Transitive) Start(ctx context.Context, startReqID uint32) error {
 	t.requestID = startReqID
-	preferredID, err := t.VM.GetPreference(ctx)
-	if err != nil {
-		return err
-	}
+	preferredID := t.VM.GetPreference()
 	preferredBlock, err := t.VM.GetBlock(ctx, preferredID)
 	if err != nil {
 		return err
@@ -514,16 +511,12 @@ func (t *Transitive) Start(ctx context.Context, startReqID uint32) error {
 					}
 				}
 				// to ensure we do not insert the same block twice, we must drop the next block from
-				// the preferred chain, which is guaranteed to be one of the already delviered options.
+				// the preferred chain, which is guaranteed to be one of the already delivered options.
 				if len(preferredChain) > 0 {
 					preferredChain = preferredChain[:len(preferredChain)-1]
 				}
 			}
 		}
-	}
-
-	if err := t.VM.SetPreference(ctx, preferredID); err != nil {
-		return err
 	}
 
 	t.Ctx.Log.Info("consensus starting",

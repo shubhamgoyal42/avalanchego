@@ -31,8 +31,6 @@ service VM {
   rpc GetBlock(GetBlockRequest) returns (GetBlockResponse);
   // Notify the VM of the currently preferred block.
   rpc SetPreference(SetPreferenceRequest) returns (google.protobuf.Empty);
-  // Retrieve the currently preferred block from the VM.
-  rpc GetPreference(google.protobuf.Empty) returns (GetPreferenceResponse);
   // Attempt to verify the health of the VM.
   rpc Health(google.protobuf.Empty) returns (HealthResponse);
   // Version returns the version of the VM.
@@ -58,6 +56,7 @@ service VM {
   rpc BatchedParseBlock(BatchedParseBlockRequest) returns (BatchedParseBlockResponse);
 
   // HeightIndexedChainVM
+  rpc VerifyHeightIndex(google.protobuf.Empty) returns (VerifyHeightIndexResponse);
   rpc GetBlockIDAtHeight(GetBlockIDAtHeightRequest) returns (GetBlockIDAtHeightResponse);
 
   // StateSyncableVM
@@ -205,10 +204,6 @@ message SetPreferenceRequest {
   bytes id = 1;
 }
 
-message GetPreferenceResponse {
-  bytes blk_id = 1;
-}
-
 message BlockVerifyRequest {
   bytes bytes = 1;
 
@@ -337,6 +332,10 @@ message BatchedParseBlockRequest {
 
 message BatchedParseBlockResponse {
   repeated ParseBlockResponse response = 1;
+}
+
+message VerifyHeightIndexResponse {
+  Error err = 1;
 }
 
 message GetBlockIDAtHeightRequest {

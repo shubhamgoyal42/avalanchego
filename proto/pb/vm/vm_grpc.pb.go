@@ -30,7 +30,6 @@ const (
 	VM_ParseBlock_FullMethodName                 = "/vm.VM/ParseBlock"
 	VM_GetBlock_FullMethodName                   = "/vm.VM/GetBlock"
 	VM_SetPreference_FullMethodName              = "/vm.VM/SetPreference"
-	VM_GetPreference_FullMethodName              = "/vm.VM/GetPreference"
 	VM_Health_FullMethodName                     = "/vm.VM/Health"
 	VM_Version_FullMethodName                    = "/vm.VM/Version"
 	VM_AppRequest_FullMethodName                 = "/vm.VM/AppRequest"
@@ -43,6 +42,7 @@ const (
 	VM_CrossChainAppResponse_FullMethodName      = "/vm.VM/CrossChainAppResponse"
 	VM_GetAncestors_FullMethodName               = "/vm.VM/GetAncestors"
 	VM_BatchedParseBlock_FullMethodName          = "/vm.VM/BatchedParseBlock"
+	VM_VerifyHeightIndex_FullMethodName          = "/vm.VM/VerifyHeightIndex"
 	VM_GetBlockIDAtHeight_FullMethodName         = "/vm.VM/GetBlockIDAtHeight"
 	VM_StateSyncEnabled_FullMethodName           = "/vm.VM/StateSyncEnabled"
 	VM_GetOngoingSyncStateSummary_FullMethodName = "/vm.VM/GetOngoingSyncStateSummary"
@@ -79,8 +79,6 @@ type VMClient interface {
 	GetBlock(ctx context.Context, in *GetBlockRequest, opts ...grpc.CallOption) (*GetBlockResponse, error)
 	// Notify the VM of the currently preferred block.
 	SetPreference(ctx context.Context, in *SetPreferenceRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	// Retrieve the currently preferred block from the VM.
-	GetPreference(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetPreferenceResponse, error)
 	// Attempt to verify the health of the VM.
 	Health(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*HealthResponse, error)
 	// Version returns the version of the VM.
@@ -104,6 +102,7 @@ type VMClient interface {
 	GetAncestors(ctx context.Context, in *GetAncestorsRequest, opts ...grpc.CallOption) (*GetAncestorsResponse, error)
 	BatchedParseBlock(ctx context.Context, in *BatchedParseBlockRequest, opts ...grpc.CallOption) (*BatchedParseBlockResponse, error)
 	// HeightIndexedChainVM
+	VerifyHeightIndex(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*VerifyHeightIndexResponse, error)
 	GetBlockIDAtHeight(ctx context.Context, in *GetBlockIDAtHeightRequest, opts ...grpc.CallOption) (*GetBlockIDAtHeightResponse, error)
 	// StateSyncableVM
 	//
@@ -224,15 +223,6 @@ func (c *vMClient) SetPreference(ctx context.Context, in *SetPreferenceRequest, 
 	return out, nil
 }
 
-func (c *vMClient) GetPreference(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetPreferenceResponse, error) {
-	out := new(GetPreferenceResponse)
-	err := c.cc.Invoke(ctx, VM_GetPreference_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *vMClient) Health(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*HealthResponse, error) {
 	out := new(HealthResponse)
 	err := c.cc.Invoke(ctx, VM_Health_FullMethodName, in, out, opts...)
@@ -335,6 +325,15 @@ func (c *vMClient) GetAncestors(ctx context.Context, in *GetAncestorsRequest, op
 func (c *vMClient) BatchedParseBlock(ctx context.Context, in *BatchedParseBlockRequest, opts ...grpc.CallOption) (*BatchedParseBlockResponse, error) {
 	out := new(BatchedParseBlockResponse)
 	err := c.cc.Invoke(ctx, VM_BatchedParseBlock_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *vMClient) VerifyHeightIndex(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*VerifyHeightIndexResponse, error) {
+	out := new(VerifyHeightIndexResponse)
+	err := c.cc.Invoke(ctx, VM_VerifyHeightIndex_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -455,8 +454,6 @@ type VMServer interface {
 	GetBlock(context.Context, *GetBlockRequest) (*GetBlockResponse, error)
 	// Notify the VM of the currently preferred block.
 	SetPreference(context.Context, *SetPreferenceRequest) (*emptypb.Empty, error)
-	// Retrieve the currently preferred block from the VM.
-	GetPreference(context.Context, *emptypb.Empty) (*GetPreferenceResponse, error)
 	// Attempt to verify the health of the VM.
 	Health(context.Context, *emptypb.Empty) (*HealthResponse, error)
 	// Version returns the version of the VM.
@@ -480,6 +477,7 @@ type VMServer interface {
 	GetAncestors(context.Context, *GetAncestorsRequest) (*GetAncestorsResponse, error)
 	BatchedParseBlock(context.Context, *BatchedParseBlockRequest) (*BatchedParseBlockResponse, error)
 	// HeightIndexedChainVM
+	VerifyHeightIndex(context.Context, *emptypb.Empty) (*VerifyHeightIndexResponse, error)
 	GetBlockIDAtHeight(context.Context, *GetBlockIDAtHeightRequest) (*GetBlockIDAtHeightResponse, error)
 	// StateSyncableVM
 	//
@@ -537,9 +535,6 @@ func (UnimplementedVMServer) GetBlock(context.Context, *GetBlockRequest) (*GetBl
 func (UnimplementedVMServer) SetPreference(context.Context, *SetPreferenceRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetPreference not implemented")
 }
-func (UnimplementedVMServer) GetPreference(context.Context, *emptypb.Empty) (*GetPreferenceResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetPreference not implemented")
-}
 func (UnimplementedVMServer) Health(context.Context, *emptypb.Empty) (*HealthResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Health not implemented")
 }
@@ -575,6 +570,9 @@ func (UnimplementedVMServer) GetAncestors(context.Context, *GetAncestorsRequest)
 }
 func (UnimplementedVMServer) BatchedParseBlock(context.Context, *BatchedParseBlockRequest) (*BatchedParseBlockResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BatchedParseBlock not implemented")
+}
+func (UnimplementedVMServer) VerifyHeightIndex(context.Context, *emptypb.Empty) (*VerifyHeightIndexResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VerifyHeightIndex not implemented")
 }
 func (UnimplementedVMServer) GetBlockIDAtHeight(context.Context, *GetBlockIDAtHeightRequest) (*GetBlockIDAtHeightResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetBlockIDAtHeight not implemented")
@@ -799,24 +797,6 @@ func _VM_SetPreference_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
-func _VM_GetPreference_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(emptypb.Empty)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(VMServer).GetPreference(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: VM_GetPreference_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(VMServer).GetPreference(ctx, req.(*emptypb.Empty))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _VM_Health_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
@@ -1029,6 +1009,24 @@ func _VM_BatchedParseBlock_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(VMServer).BatchedParseBlock(ctx, req.(*BatchedParseBlockRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _VM_VerifyHeightIndex_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VMServer).VerifyHeightIndex(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: VM_VerifyHeightIndex_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VMServer).VerifyHeightIndex(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1261,10 +1259,6 @@ var VM_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _VM_SetPreference_Handler,
 		},
 		{
-			MethodName: "GetPreference",
-			Handler:    _VM_GetPreference_Handler,
-		},
-		{
 			MethodName: "Health",
 			Handler:    _VM_Health_Handler,
 		},
@@ -1311,6 +1305,10 @@ var VM_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "BatchedParseBlock",
 			Handler:    _VM_BatchedParseBlock_Handler,
+		},
+		{
+			MethodName: "VerifyHeightIndex",
+			Handler:    _VM_VerifyHeightIndex_Handler,
 		},
 		{
 			MethodName: "GetBlockIDAtHeight",

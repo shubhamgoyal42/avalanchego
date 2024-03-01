@@ -26,7 +26,6 @@ var _ Builder = (*builder)(nil)
 
 type Builder interface {
 	SetPreference(preferred ids.ID)
-	Preferred() ids.ID
 	AddTx(ctx context.Context, tx *tx.Tx) error
 	BuildBlock(ctx context.Context, blockContext *smblock.Context) (chain.Block, error)
 }
@@ -53,10 +52,6 @@ func New(chainContext *snow.Context, engineChan chan<- common.Message, chain cha
 
 func (b *builder) SetPreference(preferred ids.ID) {
 	b.preference = preferred
-}
-
-func (b *builder) Preferred() ids.ID {
-	return b.preference
 }
 
 func (b *builder) AddTx(_ context.Context, newTx *tx.Tx) error {

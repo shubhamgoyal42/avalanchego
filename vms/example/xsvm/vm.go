@@ -160,16 +160,16 @@ func (vm *VM) SetPreference(_ context.Context, preferred ids.ID) error {
 	return nil
 }
 
-func (vm VM) GetPreference(_ context.Context) (ids.ID, error) {
-	return vm.builder.Preferred(), nil
-}
-
 func (vm *VM) LastAccepted(context.Context) (ids.ID, error) {
 	return vm.chain.LastAccepted(), nil
 }
 
 func (vm *VM) BuildBlockWithContext(ctx context.Context, blockContext *smblock.Context) (snowman.Block, error) {
 	return vm.builder.BuildBlock(ctx, blockContext)
+}
+
+func (*VM) VerifyHeightIndex(context.Context) error {
+	return nil
 }
 
 func (vm *VM) GetBlockIDAtHeight(_ context.Context, height uint64) (ids.ID, error) {

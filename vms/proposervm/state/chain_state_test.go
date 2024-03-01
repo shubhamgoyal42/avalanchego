@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"go.uber.org/mock/gomock"
 
 	"github.com/ava-labs/avalanchego/database"
 	"github.com/ava-labs/avalanchego/database/memdb"
@@ -43,12 +42,9 @@ func testChainState(a *require.Assertions, cs ChainState) {
 
 func TestChainState(t *testing.T) {
 	a := require.New(t)
-	ctrl := gomock.NewController(t)
 
-	blockState := NewMockBlockState(ctrl)
 	db := memdb.New()
-	cs, err := NewChainState(db, blockState)
-	a.NoError(err)
+	cs := newChainState(db)
 
 	testChainState(a, cs)
 }

@@ -33,7 +33,7 @@ var (
 	Genesis           = ids.GenerateTestID()
 )
 
-func setup(t *testing.T, engCfg Config) (ids.NodeID, validators.Manager, *common.SenderTest, *block.TestVM, *Transitive, snowman.Block) {
+func setup(t *testing.T, engCfg Config) (ids.NodeID, validators.Manager, *common.SenderTest, *TestVM, *Transitive, snowman.Block) {
 	require := require.New(t)
 
 	vals := validators.NewManager()
@@ -49,7 +49,9 @@ func setup(t *testing.T, engCfg Config) (ids.NodeID, validators.Manager, *common
 	engCfg.Sender = sender
 	sender.Default(true)
 
-	vm := &block.TestVM{}
+	vm := &TestVM{
+		TestVM: &block.TestVM{},
+	}
 	vm.T = t
 	engCfg.VM = vm
 
@@ -77,6 +79,10 @@ func setup(t *testing.T, engCfg Config) (ids.NodeID, validators.Manager, *common
 		return gBlk.ID(), nil
 	}
 
+	vm.GetPreferenceF = func() ids.ID {
+		return gBlk.ID()
+	}
+
 	vm.GetBlockF = func(_ context.Context, blkID ids.ID) (snowman.Block, error) {
 		switch blkID {
 		case gBlk.ID():
@@ -96,7 +102,7 @@ func setup(t *testing.T, engCfg Config) (ids.NodeID, validators.Manager, *common
 	return vdr, vals, sender, vm, te, gBlk
 }
 
-func setupDefaultConfig(t *testing.T) (ids.NodeID, validators.Manager, *common.SenderTest, *block.TestVM, *Transitive, snowman.Block) {
+func setupDefaultConfig(t *testing.T) (ids.NodeID, validators.Manager, *common.SenderTest, *TestVM, *Transitive, snowman.Block) {
 	engCfg := DefaultConfig(t)
 	return setup(t, engCfg)
 }
@@ -355,7 +361,9 @@ func TestEngineMultipleQuery(t *testing.T) {
 	engCfg.Sender = sender
 	sender.Default(true)
 
-	vm := &block.TestVM{}
+	vm := &TestVM{
+		TestVM: &block.TestVM{},
+	}
 	vm.T = t
 	engCfg.VM = vm
 
@@ -371,6 +379,11 @@ func TestEngineMultipleQuery(t *testing.T) {
 	vm.LastAcceptedF = func(context.Context) (ids.ID, error) {
 		return gBlk.ID(), nil
 	}
+
+	vm.GetPreferenceF = func() ids.ID {
+		return gBlk.ID()
+	}
+
 	vm.GetBlockF = func(_ context.Context, blkID ids.ID) (snowman.Block, error) {
 		require.Equal(gBlk.ID(), blkID)
 		return gBlk, nil
@@ -774,7 +787,9 @@ func TestVoteCanceling(t *testing.T) {
 	engCfg.Sender = sender
 	sender.Default(true)
 
-	vm := &block.TestVM{}
+	vm := &TestVM{
+		TestVM: &block.TestVM{},
+	}
 	vm.T = t
 	engCfg.VM = vm
 
@@ -790,6 +805,11 @@ func TestVoteCanceling(t *testing.T) {
 	vm.LastAcceptedF = func(context.Context) (ids.ID, error) {
 		return gBlk.ID(), nil
 	}
+
+	vm.GetPreferenceF = func() ids.ID {
+		return gBlk.ID()
+	}
+
 	vm.GetBlockF = func(_ context.Context, id ids.ID) (snowman.Block, error) {
 		require.Equal(gBlk.ID(), id)
 		return gBlk, nil
@@ -861,10 +881,16 @@ func TestEngineNoQuery(t *testing.T) {
 		StatusV: choices.Accepted,
 	}}
 
-	vm := &block.TestVM{}
+	vm := &TestVM{
+		TestVM: &block.TestVM{},
+	}
 	vm.T = t
 	vm.LastAcceptedF = func(context.Context) (ids.ID, error) {
 		return gBlk.ID(), nil
+	}
+
+	vm.GetPreferenceF = func() ids.ID {
+		return gBlk.ID()
 	}
 
 	vm.GetBlockF = func(_ context.Context, blkID ids.ID) (snowman.Block, error) {
@@ -914,10 +940,16 @@ func TestEngineNoRepollQuery(t *testing.T) {
 		StatusV: choices.Accepted,
 	}}
 
-	vm := &block.TestVM{}
+	vm := &TestVM{
+		TestVM: &block.TestVM{},
+	}
 	vm.T = t
 	vm.LastAcceptedF = func(context.Context) (ids.ID, error) {
 		return gBlk.ID(), nil
+	}
+
+	vm.GetPreferenceF = func() ids.ID {
+		return gBlk.ID()
 	}
 
 	vm.GetBlockF = func(_ context.Context, blkID ids.ID) (snowman.Block, error) {
@@ -1608,7 +1640,9 @@ func TestEngineAggressivePolling(t *testing.T) {
 	engCfg.Sender = sender
 	sender.Default(true)
 
-	vm := &block.TestVM{}
+	vm := &TestVM{
+		TestVM: &block.TestVM{},
+	}
 	vm.T = t
 	engCfg.VM = vm
 
@@ -1624,6 +1658,11 @@ func TestEngineAggressivePolling(t *testing.T) {
 	vm.LastAcceptedF = func(context.Context) (ids.ID, error) {
 		return gBlk.ID(), nil
 	}
+
+	vm.GetPreferenceF = func() ids.ID {
+		return gBlk.ID()
+	}
+
 	vm.GetBlockF = func(_ context.Context, blkID ids.ID) (snowman.Block, error) {
 		require.Equal(gBlk.ID(), blkID)
 		return gBlk, nil
@@ -1710,7 +1749,9 @@ func TestEngineDoubleChit(t *testing.T) {
 
 	sender.Default(true)
 
-	vm := &block.TestVM{}
+	vm := &TestVM{
+		TestVM: &block.TestVM{},
+	}
 	vm.T = t
 	engCfg.VM = vm
 
@@ -1726,6 +1767,11 @@ func TestEngineDoubleChit(t *testing.T) {
 	vm.LastAcceptedF = func(context.Context) (ids.ID, error) {
 		return gBlk.ID(), nil
 	}
+
+	vm.GetPreferenceF = func() ids.ID {
+		return gBlk.ID()
+	}
+
 	vm.GetBlockF = func(_ context.Context, id ids.ID) (snowman.Block, error) {
 		require.Equal(gBlk.ID(), id)
 		return gBlk, nil
@@ -1809,7 +1855,9 @@ func TestEngineBuildBlockLimit(t *testing.T) {
 	engCfg.Sender = sender
 	sender.Default(true)
 
-	vm := &block.TestVM{}
+	vm := &TestVM{
+		TestVM: &block.TestVM{},
+	}
 	vm.T = t
 	engCfg.VM = vm
 
@@ -1825,6 +1873,11 @@ func TestEngineBuildBlockLimit(t *testing.T) {
 	vm.LastAcceptedF = func(context.Context) (ids.ID, error) {
 		return gBlk.ID(), nil
 	}
+
+	vm.GetPreferenceF = func() ids.ID {
+		return gBlk.ID()
+	}
+
 	vm.GetBlockF = func(_ context.Context, blkID ids.ID) (snowman.Block, error) {
 		require.Equal(gBlk.ID(), blkID)
 		return gBlk, nil
@@ -2844,7 +2897,9 @@ func TestEngineApplyAcceptedFrontierInQueryFailed(t *testing.T) {
 
 	sender.Default(true)
 
-	vm := &block.TestVM{}
+	vm := &TestVM{
+		TestVM: &block.TestVM{},
+	}
 	vm.T = t
 	engCfg.VM = vm
 
@@ -2860,6 +2915,11 @@ func TestEngineApplyAcceptedFrontierInQueryFailed(t *testing.T) {
 	vm.LastAcceptedF = func(context.Context) (ids.ID, error) {
 		return gBlk.ID(), nil
 	}
+
+	vm.GetPreferenceF = func() ids.ID {
+		return gBlk.ID()
+	}
+
 	vm.GetBlockF = func(_ context.Context, id ids.ID) (snowman.Block, error) {
 		require.Equal(gBlk.ID(), id)
 		return gBlk, nil
@@ -2952,7 +3012,9 @@ func TestEngineRepollsMisconfiguredSubnet(t *testing.T) {
 
 	sender.Default(true)
 
-	vm := &block.TestVM{}
+	vm := &TestVM{
+		TestVM: &block.TestVM{},
+	}
 	vm.T = t
 	engCfg.VM = vm
 
@@ -2964,6 +3026,10 @@ func TestEngineRepollsMisconfiguredSubnet(t *testing.T) {
 		IDV:     ids.GenerateTestID(),
 		StatusV: choices.Accepted,
 	}}
+
+	vm.GetPreferenceF = func() ids.ID {
+		return gBlk.ID()
+	}
 
 	vm.LastAcceptedF = func(context.Context) (ids.ID, error) {
 		return gBlk.ID(), nil

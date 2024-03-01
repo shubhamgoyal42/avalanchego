@@ -39,6 +39,8 @@ import (
 	"github.com/ava-labs/avalanchego/vms/rpcchainvm/grpcutils"
 	"github.com/ava-labs/avalanchego/vms/rpcchainvm/messenger"
 
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+
 	aliasreaderpb "github.com/ava-labs/avalanchego/proto/pb/aliasreader"
 	appsenderpb "github.com/ava-labs/avalanchego/proto/pb/appsender"
 	httppb "github.com/ava-labs/avalanchego/proto/pb/http"
@@ -49,7 +51,6 @@ import (
 	validatorstatepb "github.com/ava-labs/avalanchego/proto/pb/validatorstate"
 	vmpb "github.com/ava-labs/avalanchego/proto/pb/vm"
 	warppb "github.com/ava-labs/avalanchego/proto/pb/warp"
-	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 )
 
 var (
@@ -465,14 +466,6 @@ func (vm *VMServer) SetPreference(ctx context.Context, req *vmpb.SetPreferenceRe
 	return &emptypb.Empty{}, vm.vm.SetPreference(ctx, id)
 }
 
-func (vm *VMServer) GetPreference(ctx context.Context, _ *emptypb.Empty) (*vmpb.GetPreferenceResponse, error) {
-	blkID, err := vm.vm.GetPreference(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return &vmpb.GetPreferenceResponse{BlkId: blkID[:]}, nil
-}
-
 func (vm *VMServer) Health(ctx context.Context, _ *emptypb.Empty) (*vmpb.HealthResponse, error) {
 	vmHealth, err := vm.vm.HealthCheck(ctx)
 	if err != nil {
@@ -633,6 +626,13 @@ func (vm *VMServer) BatchedParseBlock(
 	return &vmpb.BatchedParseBlockResponse{
 		Response: blocks,
 	}, nil
+}
+
+func (vm *VMServer) VerifyHeightIndex(ctx context.Context, _ *emptypb.Empty) (*vmpb.VerifyHeightIndexResponse, error) {
+	err := vm.vm.VerifyHeightIndex(ctx)
+	return &vmpb.VerifyHeightIndexResponse{
+		Err: errorToErrEnum[err],
+	}, errorToRPCError(err)
 }
 
 func (vm *VMServer) GetBlockIDAtHeight(

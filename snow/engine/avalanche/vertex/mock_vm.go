@@ -234,21 +234,6 @@ func (mr *MockLinearizableVMMockRecorder) GetBlockIDAtHeight(arg0, arg1 any) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBlockIDAtHeight", reflect.TypeOf((*MockLinearizableVM)(nil).GetBlockIDAtHeight), arg0, arg1)
 }
 
-// GetPreference mocks base method.
-func (m *MockLinearizableVM) GetPreference(arg0 context.Context) (ids.ID, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPreference", arg0)
-	ret0, _ := ret[0].(ids.ID)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetPreference indicates an expected call of GetPreference.
-func (mr *MockLinearizableVMMockRecorder) GetPreference(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPreference", reflect.TypeOf((*MockLinearizableVM)(nil).GetPreference), arg0)
-}
-
 // HealthCheck mocks base method.
 func (m *MockLinearizableVM) HealthCheck(arg0 context.Context) (any, error) {
 	m.ctrl.T.Helper()

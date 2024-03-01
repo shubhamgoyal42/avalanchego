@@ -382,16 +382,16 @@ func (vm *VM) SetPreference(_ context.Context, blkID ids.ID) error {
 	return nil
 }
 
-func (vm *VM) GetPreference(_ context.Context) (ids.ID, error) {
-	return vm.chainManager.Preferred(), nil
-}
-
 func (vm *VM) LastAccepted(context.Context) (ids.ID, error) {
 	return vm.chainManager.LastAccepted(), nil
 }
 
 func (vm *VM) GetBlockIDAtHeight(_ context.Context, height uint64) (ids.ID, error) {
 	return vm.state.GetBlockIDAtHeight(height)
+}
+
+func (*VM) VerifyHeightIndex(context.Context) error {
+	return nil
 }
 
 /*
