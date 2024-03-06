@@ -125,8 +125,8 @@ type Unary interface {
 	Finalized() bool
 
 	// Returns a new binary snowball instance with the agreement parameters
-	// transferred. Takes in the new beta value and the original choice
-	Extend(beta, originalPreference int) Binary
+	// transferred. Takes in the original choice
+	Extend(originalPreference int) Binary
 
 	// Returns a new unary snowflake instance with the same state
 	Clone() Unary

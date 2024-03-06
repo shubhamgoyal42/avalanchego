@@ -332,8 +332,7 @@ func TestEngineMultipleQuery(t *testing.T) {
 		K:                     3,
 		AlphaPreference:       2,
 		AlphaConfidence:       2,
-		BetaVirtuous:          1,
-		BetaRogue:             2,
+		Beta:                  1,
 		ConcurrentRepolls:     1,
 		OptimalProcessing:     1,
 		MaxOutstandingItems:   1,
@@ -751,8 +750,7 @@ func TestVoteCanceling(t *testing.T) {
 		K:                     3,
 		AlphaPreference:       2,
 		AlphaConfidence:       2,
-		BetaVirtuous:          1,
-		BetaRogue:             2,
+		Beta:                  1,
 		ConcurrentRepolls:     1,
 		OptimalProcessing:     1,
 		MaxOutstandingItems:   1,
@@ -1181,9 +1179,57 @@ func TestEngineBlockingChitRequest(t *testing.T) {
 func TestEngineBlockingChitResponse(t *testing.T) {
 	require := require.New(t)
 
-	vdr, _, sender, vm, te, gBlk := setupDefaultConfig(t)
+	engCfg := DefaultConfig(t)
+	engCfg.Params = snowball.Parameters{
+		K:                     1,
+		AlphaPreference:       1,
+		AlphaConfidence:       1,
+		Beta:                  2,
+		ConcurrentRepolls:     1,
+		OptimalProcessing:     1,
+		MaxOutstandingItems:   1,
+		MaxItemProcessingTime: 1,
+	}
+
+	vals := validators.NewManager()
+	engCfg.Validators = vals
+
+	vdr := ids.GenerateTestNodeID()
+
+	require.NoError(vals.AddStaker(engCfg.Ctx.SubnetID, vdr, nil, ids.Empty, 1))
+
+	sender := &common.SenderTest{T: t}
+	engCfg.Sender = sender
 
 	sender.Default(true)
+
+	vm := &block.TestVM{}
+	vm.T = t
+	engCfg.VM = vm
+
+	vm.Default(true)
+	vm.CantSetState = false
+	vm.CantSetPreference = false
+
+	gBlk := &snowman.TestBlock{TestDecidable: choices.TestDecidable{
+		IDV:     ids.GenerateTestID(),
+		StatusV: choices.Accepted,
+	}}
+
+	vm.LastAcceptedF = func(context.Context) (ids.ID, error) {
+		return gBlk.ID(), nil
+	}
+	vm.GetBlockF = func(_ context.Context, id ids.ID) (snowman.Block, error) {
+		require.Equal(gBlk.ID(), id)
+		return gBlk, nil
+	}
+
+	te, err := New(engCfg)
+	require.NoError(err)
+
+	require.NoError(te.Start(context.Background(), 0))
+
+	vm.LastAcceptedF = nil
 
 	issuedBlk := &snowman.TestBlock{
 		TestDecidable: choices.TestDecidable{
@@ -1596,6 +1642,7 @@ func TestEngineAggressivePolling(t *testing.T) {
 	require := require.New(t)
 
 	engCfg := DefaultConfig(t)
+	engCfg.Params.Beta = 2
 	engCfg.Params.ConcurrentRepolls = 2
 
 	vals := validators.NewManager()
@@ -1688,8 +1735,7 @@ func TestEngineDoubleChit(t *testing.T) {
 		K:                     2,
 		AlphaPreference:       2,
 		AlphaConfidence:       2,
-		BetaVirtuous:          1,
-		BetaRogue:             2,
+		Beta:                  1,
 		ConcurrentRepolls:     1,
 		OptimalProcessing:     1,
 		MaxOutstandingItems:   1,
@@ -2825,8 +2871,7 @@ func TestEngineApplyAcceptedFrontierInQueryFailed(t *testing.T) {
 		K:                     1,
 		AlphaPreference:       1,
 		AlphaConfidence:       1,
-		BetaVirtuous:          2,
-		BetaRogue:             2,
+		Beta:                  2,
 		ConcurrentRepolls:     1,
 		OptimalProcessing:     1,
 		MaxOutstandingItems:   1,
@@ -2934,8 +2979,7 @@ func TestEngineRepollsMisconfiguredSubnet(t *testing.T) {
 		K:                     1,
 		AlphaPreference:       1,
 		AlphaConfidence:       1,
-		BetaVirtuous:          1,
-		BetaRogue:             1,
+		Beta:                  1,
 		ConcurrentRepolls:     1,
 		OptimalProcessing:     1,
 		MaxOutstandingItems:   1,

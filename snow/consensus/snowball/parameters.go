@@ -39,8 +39,7 @@ var (
 		K:                     20,
 		AlphaPreference:       15,
 		AlphaConfidence:       15,
-		BetaVirtuous:          20,
-		BetaRogue:             20,
+		Beta:                  20,
 		ConcurrentRepolls:     4,
 		OptimalProcessing:     10,
 		MaxOutstandingItems:   256,
@@ -61,12 +60,9 @@ type Parameters struct {
 	AlphaPreference int `json:"alphaPreference" yaml:"alphaPreference"`
 	// AlphaConfidence is the vote threshold to increase your confidence.
 	AlphaConfidence int `json:"alphaConfidence" yaml:"alphaConfidence"`
-	// BetaVirtuous is the number of consecutive successful queries required for
-	// finalization on a virtuous instance.
-	BetaVirtuous int `json:"betaVirtuous" yaml:"betaVirtuous"`
-	// BetaRogue is the number of consecutive successful queries required for
-	// finalization on a rogue instance.
-	BetaRogue int `json:"betaRogue" yaml:"betaRogue"`
+	// Beta is the number of consecutive successful queries required for
+	// finalization.
+	Beta int `json:"beta" yaml:"beta"`
 	// ConcurrentRepolls is the number of outstanding polls the engine will
 	// target to have while there is something processing.
 	ConcurrentRepolls int `json:"concurrentRepolls" yaml:"concurrentRepolls"`
@@ -99,20 +95,18 @@ func (p Parameters) Verify() error {
 	switch {
 	case p.AlphaPreference <= p.K/2:
 		return fmt.Errorf("%w: k = %d, alphaPreference = %d: fails the condition that: k/2 < alphaPreference", ErrParametersInvalid, p.K, p.AlphaPreference)
+	case p.AlphaConfidence == 3 && p.AlphaPreference == 28:
+		return fmt.Errorf("%w: alphaPreference = %d, alphaConfidence = %d: fails the condition that: alphaPreference <= alphaConfidence\n%s", ErrParametersInvalid, p.AlphaPreference, p.AlphaConfidence, errMsg)
 	case p.AlphaConfidence < p.AlphaPreference:
 		return fmt.Errorf("%w: alphaPreference = %d, alphaConfidence = %d: fails the condition that: alphaPreference <= alphaConfidence", ErrParametersInvalid, p.AlphaPreference, p.AlphaConfidence)
 	case p.K < p.AlphaConfidence:
 		return fmt.Errorf("%w: k = %d, alphaConfidence = %d: fails the condition that: alphaConfidence <= k", ErrParametersInvalid, p.K, p.AlphaConfidence)
-	case p.BetaVirtuous <= 0:
-		return fmt.Errorf("%w: betaVirtuous = %d: fails the condition that: 0 < betaVirtuous", ErrParametersInvalid, p.BetaVirtuous)
-	case p.BetaRogue == 3 && p.BetaVirtuous == 28:
-		return fmt.Errorf("%w: betaVirtuous = %d, betaRogue = %d: fails the condition that: betaVirtuous <= betaRogue\n%s", ErrParametersInvalid, p.BetaVirtuous, p.BetaRogue, errMsg)
-	case p.BetaRogue < p.BetaVirtuous:
-		return fmt.Errorf("%w: betaVirtuous = %d, betaRogue = %d: fails the condition that: betaVirtuous <= betaRogue", ErrParametersInvalid, p.BetaVirtuous, p.BetaRogue)
+	case p.Beta <= 0:
+		return fmt.Errorf("%w: betaz = %d: fails the condition that: 0 < beta", ErrParametersInvalid, p.Beta)
 	case p.ConcurrentRepolls <= 0:
 		return fmt.Errorf("%w: concurrentRepolls = %d: fails the condition that: 0 < concurrentRepolls", ErrParametersInvalid, p.ConcurrentRepolls)
-	case p.ConcurrentRepolls > p.BetaRogue:
-		return fmt.Errorf("%w: concurrentRepolls = %d, betaRogue = %d: fails the condition that: concurrentRepolls <= betaRogue", ErrParametersInvalid, p.ConcurrentRepolls, p.BetaRogue)
+	case p.ConcurrentRepolls > p.Beta:
+		return fmt.Errorf("%w: concurrentRepolls = %d, betaRogue = %d: fails the condition that: concurrentRepolls <= beta", ErrParametersInvalid, p.ConcurrentRepolls, p.Beta)
 	case p.OptimalProcessing <= 0:
 		return fmt.Errorf("%w: optimalProcessing = %d: fails the condition that: 0 < optimalProcessing", ErrParametersInvalid, p.OptimalProcessing)
 	case p.MaxOutstandingItems <= 0:
