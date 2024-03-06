@@ -708,46 +708,6 @@ func (p *peer) shouldDisconnect() bool {
 		)
 		return true
 	}
-
-	// Enforce that all validators that have registered a BLS key are signing
-	// their IP with it after the activation of Durango.
-	vdr, ok := p.Validators.GetValidator(constants.PrimaryNetworkID, p.id)
-	if !ok || vdr.PublicKey == nil || vdr.TxID == p.txIDOfVerifiedBLSKey {
-		return false
-	}
-
-	postDurango := p.Clock.Time().After(version.GetDurangoTime(constants.MainnetID))
-	if postDurango && p.ip.BLSSignature == nil {
-		p.Log.Debug("disconnecting from peer",
-			zap.String("reason", "missing BLS signature"),
-			zap.Stringer("nodeID", p.id),
-		)
-		return true
-	}
-
-	// If Durango hasn't activated on mainnet yet, we don't require BLS
-	// signatures to be provided. However, if they are provided, verify that
-	// they are correct.
-	if p.ip.BLSSignature == nil {
-		return false
-	}
-
-	validSignature := bls.VerifyProofOfPossession(
-		vdr.PublicKey,
-		p.ip.BLSSignature,
-		p.ip.UnsignedIP.bytes(),
-	)
-	if !validSignature {
-		p.Log.Debug("disconnecting from peer",
-			zap.String("reason", "invalid BLS signature"),
-			zap.Stringer("nodeID", p.id),
-		)
-		return true
-	}
-
-	// Avoid unnecessary signature verifications by only verifing the signature
-	// once per validation period.
-	p.txIDOfVerifiedBLSKey = vdr.TxID
 	return false
 }
 

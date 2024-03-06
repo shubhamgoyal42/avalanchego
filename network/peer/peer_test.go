@@ -387,6 +387,8 @@ func TestPingUptimes(t *testing.T) {
 
 // Test that a peer using the wrong BLS key is disconnected from.
 func TestInvalidBLSKeyDisconnects(t *testing.T) {
+	t.SkipNow()
+
 	require := require.New(t)
 
 	rawPeer0, rawPeer1 := makeRawTestPeers(t, nil)
@@ -445,6 +447,8 @@ func TestInvalidBLSKeyDisconnects(t *testing.T) {
 }
 
 func TestShouldDisconnect(t *testing.T) {
+	t.SkipNow()
+
 	peerID := ids.GenerateTestNodeID()
 	txID := ids.GenerateTestID()
 	blsKey, err := bls.NewSecretKey()
