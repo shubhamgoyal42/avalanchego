@@ -12,7 +12,7 @@ import (
 var DefaultConfig = Config{
 	MaxValidatorSetStaleness:                    time.Minute,
 	TargetGossipSize:                            20 * units.KiB,
-	PushGossipNumValidators:                     100,
+	PushGossipNumValidators:                     750,
 	PushGossipNumPeers:                          0,
 	PushRegossipNumValidators:                   10,
 	PushRegossipNumPeers:                        0,
