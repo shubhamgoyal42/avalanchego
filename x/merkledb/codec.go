@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"io"
 	"math"
 	"math/bits"
@@ -48,6 +49,7 @@ var (
 	errNonZeroKeyPadding  = errors.New("key partial byte should be padded with 0s")
 	errExtraSpace         = errors.New("trailing buffer space")
 	errIntOverflow        = errors.New("value overflows int")
+	errUnexpectedKeyLen   = errors.New("unexpected key length")
 )
 
 // encoderDecoder defines the interface needed by merkleDB to marshal
@@ -149,8 +151,7 @@ func (c *codecImpl) encodeDBNode(n *dbNode) []byte {
 
 func (c *codecImpl) encodeHashValues(n *node) []byte {
 	var (
-		numChildren = len(n.children)
-		// Estimate size [hv] to prevent memory allocations
+		numChildren  = len(n.children)
 		estimatedLen = minVarIntLen + numChildren*hashValuesChildLen + estimatedValueLen + estimatedKeyLen
 		buf          = bytes.NewBuffer(make([]byte, 0, estimatedLen))
 	)
@@ -371,7 +372,7 @@ func (c *codecImpl) encodeKey(key Key) []byte {
 
 func (c *codecImpl) encodeKeyToBuffer(dst *bytes.Buffer, key Key) {
 	c.encodeUint(dst, uint64(key.length))
-	_, _ = dst.Write(key.Bytes())
+	c.encodeByteSlice(dst, key.Bytes())
 }
 
 func (c *codecImpl) decodeKey(b []byte) (Key, error) {
@@ -405,22 +406,23 @@ func (c *codecImpl) decodeKeyFromReader(src *bytes.Reader) (Key, error) {
 	if keyBytesLen > src.Len() {
 		return Key{}, io.ErrUnexpectedEOF
 	}
-	buffer := make([]byte, keyBytesLen)
-	if _, err := io.ReadFull(src, buffer); err != nil {
-		if err == io.EOF {
-			err = io.ErrUnexpectedEOF
-		}
+	keyBytes, err := c.decodeByteSlice(src)
+	if err != nil {
 		return Key{}, err
 	}
+	if len(keyBytes) != keyBytesLen {
+		return Key{}, fmt.Errorf("%w: expected %d bytes, got %d", errUnexpectedKeyLen, keyBytesLen, len(keyBytes))
+	}
+
 	if result.hasPartialByte() {
 		// Confirm that the padding bits in the partial byte are 0.
 		// We want to only look at the bits to the right of the last token, which is at index length-1.
 		// Generate a mask where the (result.length % 8) left bits are 0.
 		paddingMask := byte(0xFF >> (result.length % 8))
-		if buffer[keyBytesLen-1]&paddingMask != 0 {
+		if keyBytes[keyBytesLen-1]&paddingMask != 0 {
 			return Key{}, errNonZeroKeyPadding
 		}
 	}
-	result.value = string(buffer)
+	result.value = string(keyBytes)
 	return result, nil
 }
