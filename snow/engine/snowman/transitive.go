@@ -462,6 +462,7 @@ func (t *Transitive) Start(ctx context.Context, startReqID uint32) error {
 	if err != nil {
 		return err
 	}
+
 	preferredChain := make([]snowman.Block, 0, 1)
 	for preferredBlock.Status() != choices.Accepted {
 		preferredChain = append(preferredChain, preferredBlock)
