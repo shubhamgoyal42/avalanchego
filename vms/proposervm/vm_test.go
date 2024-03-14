@@ -2980,7 +2980,7 @@ func TestPreferencePersistenceAccept(t *testing.T) {
 			case bytes.Equal(blkBytes, blk1.Bytes()):
 				return blk1, nil
 			default:
-				return nil, fmt.Errorf("unexpected block")
+				return nil, errors.New("unexpected block")
 			}
 		},
 		VerifyHeightIndexF: func(context.Context) error {
@@ -3142,7 +3142,7 @@ func TestPreferencePersistenceReject(t *testing.T) {
 			case bytes.Equal(blkBytes, blk1.Bytes()):
 				return blk1, nil
 			default:
-				return nil, fmt.Errorf("unexpected block")
+				return nil, errors.New("unexpected block")
 			}
 		},
 		VerifyHeightIndexF: func(context.Context) error {
@@ -3234,7 +3234,7 @@ func TestPreferencePersistenceReject(t *testing.T) {
 		require.NoError(err)
 		require.False(ok)
 
-		gotBlk, err = proposerVM.GetBlock(ctx, builtBlk.ID())
+		_, err = proposerVM.GetBlock(ctx, builtBlk.ID())
 		require.ErrorIs(err, database.ErrNotFound)
 
 		require.NoError(proposerVM.Shutdown(ctx))
