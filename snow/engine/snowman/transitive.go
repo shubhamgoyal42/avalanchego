@@ -457,6 +457,17 @@ func (t *Transitive) Context() *snow.ConsensusContext {
 
 func (t *Transitive) Start(ctx context.Context, startReqID uint32) error {
 	t.requestID = startReqID
+
+	lastAcceptedID, err := t.VM.LastAccepted(ctx)
+	if err != nil {
+		return err
+	}
+
+	lastAccepted, err := t.VM.GetBlock(ctx, lastAcceptedID)
+	if err != nil {
+		return err
+	}
+
 	preferredID := t.VM.GetPreference()
 	preferredBlock, err := t.VM.GetBlock(ctx, preferredID)
 	if err != nil {
@@ -464,16 +475,17 @@ func (t *Transitive) Start(ctx context.Context, startReqID uint32) error {
 	}
 
 	preferredChain := make([]snowman.Block, 0, 1)
-	for preferredBlock.Status() != choices.Accepted {
-		preferredChain = append(preferredChain, preferredBlock)
+	for preferredBlock.Status() == choices.Processing {
+		if preferredBlock.Height() > lastAccepted.Height() {
+			preferredChain = append(preferredChain, preferredBlock)
+		}
 
 		preferredBlock, err = t.VM.GetBlock(ctx, preferredBlock.Parent())
 		if err != nil {
 			return err
 		}
 	}
-	lastAccepted := preferredBlock
-	lastAcceptedID := lastAccepted.ID()
+
 	preferredChain = append(preferredChain, lastAccepted)
 
 	// initialize consensus to the last accepted blockID
@@ -502,6 +514,9 @@ func (t *Transitive) Start(ctx context.Context, startReqID uint32) error {
 			case err == snowman.ErrNotOracle:
 				// If I turn out to not be an option block, then continue
 				// inserting the remaining preferred children.
+				if err := t.VM.SetPreference(ctx, block.ID()); err != nil {
+					return err
+				}
 			case err != nil:
 				return err
 			default:
@@ -517,6 +532,8 @@ func (t *Transitive) Start(ctx context.Context, startReqID uint32) error {
 					preferredChain = preferredChain[:len(preferredChain)-1]
 				}
 			}
+		} else if err := t.VM.SetPreference(ctx, block.ID()); err != nil {
+			return err
 		}
 	}
 
