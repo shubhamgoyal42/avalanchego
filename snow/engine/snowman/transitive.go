@@ -517,9 +517,6 @@ func (t *Transitive) Start(ctx context.Context, startReqID uint32) error {
 			case err == snowman.ErrNotOracle:
 				// If I turn out to not be an option block, then continue
 				// inserting the remaining preferred children.
-				if err := t.VM.SetPreference(ctx, block.ID()); err != nil {
-					return err
-				}
 			case err != nil:
 				return err
 			default:
@@ -535,9 +532,11 @@ func (t *Transitive) Start(ctx context.Context, startReqID uint32) error {
 					preferredChain = preferredChain[:len(preferredChain)-1]
 				}
 			}
-		} else if err := t.VM.SetPreference(ctx, block.ID()); err != nil {
-			return err
 		}
+	}
+
+	if err := t.VM.SetPreference(ctx, preferredID); err != nil {
+		return err
 	}
 
 	t.Ctx.Log.Info("consensus starting",
