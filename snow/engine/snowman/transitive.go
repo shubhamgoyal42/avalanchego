@@ -457,14 +457,16 @@ func (t *Transitive) Context() *snow.ConsensusContext {
 
 func (t *Transitive) Start(ctx context.Context, startReqID uint32) error {
 	t.requestID = startReqID
-
 	lastAcceptedID, err := t.VM.LastAccepted(ctx)
 	if err != nil {
 		return err
 	}
 
-	lastAccepted, err := t.VM.GetBlock(ctx, lastAcceptedID)
+	lastAccepted, err := t.getBlock(ctx, lastAcceptedID)
 	if err != nil {
+		t.Ctx.Log.Error("failed to get last accepted block",
+			zap.Error(err),
+		)
 		return err
 	}
 
