@@ -503,7 +503,7 @@ func (t *Transitive) Start(ctx context.Context, startReqID uint32) error {
 
 		// If I'm in the preferred chain and am not the last accepted block, then I need to
 		// be delivered to insert into consensus.
-		if block.Status() != choices.Accepted {
+		if block.Status() == choices.Processing {
 			if err := t.deliver(ctx, t.Ctx.NodeID, block, false, issuedMetric); err != nil {
 				return err
 			}
