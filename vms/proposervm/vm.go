@@ -307,9 +307,6 @@ func (vm *VM) GetPreference() ids.ID {
 }
 
 func (vm *VM) SetPreference(ctx context.Context, preferred ids.ID) error {
-	if vm.preferred == preferred { // TODO bug?
-		return nil
-	}
 	vm.preferred = preferred
 
 	if err := vm.State.SetPreference(preferred); err != nil {
