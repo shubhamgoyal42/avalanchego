@@ -240,7 +240,6 @@ func (vm *VM) Initialize(
 	default:
 		return err
 	}
-
 	return nil
 }
 
