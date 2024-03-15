@@ -105,6 +105,7 @@ func (s *state) pruneVerifiedBlocks(db *versiondb.Database) error {
 		if preferredBlkIDs.Contains(blkID) {
 			continue
 		}
+
 		if err := s.chainState.DeleteVerifiedBlock(blkID); err != nil {
 			return nil
 		}
