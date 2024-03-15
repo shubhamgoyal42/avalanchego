@@ -63,6 +63,7 @@ func NewMetered(db *versiondb.Database, namespace string, metrics prometheus.Reg
 		blockState:  blockState,
 		HeightIndex: NewHeightIndex(heightDB, db),
 	}
+
 	return s, s.pruneVerifiedBlocks(db)
 }
 
