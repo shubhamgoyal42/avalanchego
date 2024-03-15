@@ -87,7 +87,8 @@ func (s *state) pruneVerifiedBlocks(db *versiondb.Database) error {
 	if err != nil {
 		return nil
 	}
-	for status != choices.Accepted {
+
+	for status == choices.Processing {
 		preferredBlkIDs.Add(preferredBlk.ID())
 		preferredBlk, status, err = s.blockState.GetBlock(preferredBlk.ParentID())
 		if err != nil {
