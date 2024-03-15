@@ -241,26 +241,7 @@ func (vm *VM) Initialize(
 		return err
 	}
 
-	preference, err := vm.State.GetPreference()
-	switch err {
-	case nil:
-		return vm.SetPreference(ctx, preference)
-	case database.ErrNotFound:
-		// If a previous preference was not found, default to just using the
-		// last accepted block.
-		lastAccepted, err := vm.LastAccepted(ctx)
-		if err != nil {
-			return fmt.Errorf("failed to get last accepted block: %w", err)
-		}
-
-		if err := vm.SetPreference(ctx, lastAccepted); err != nil {
-			return err
-		}
-
-		return nil
-	default:
-		return fmt.Errorf("failed to get preference: %w", err)
-	}
+	return nil
 }
 
 // shutdown ops then propagate shutdown to innerVM
@@ -326,7 +307,7 @@ func (vm *VM) GetPreference() ids.ID {
 }
 
 func (vm *VM) SetPreference(ctx context.Context, preferred ids.ID) error {
-	if vm.preferred == preferred { //TODO bug?
+	if vm.preferred == preferred { // TODO bug?
 		return nil
 	}
 	vm.preferred = preferred

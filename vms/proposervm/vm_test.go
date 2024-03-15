@@ -2293,13 +2293,12 @@ func TestVMInnerBlkCache(t *testing.T) {
 		gomock.Any(),
 	).Return(nil)
 	innerVM.EXPECT().VerifyHeightIndex(gomock.Any()).Return(nil)
-	innerVM.EXPECT().SetPreference(gomock.Any(), gomock.Any()).Return(nil)
 	innerVM.EXPECT().Shutdown(gomock.Any()).Return(nil)
 
 	{
 		innerBlk := snowman.NewMockBlock(ctrl)
 		innerBlkID := ids.GenerateTestID()
-		innerVM.EXPECT().LastAccepted(gomock.Any()).Return(innerBlkID, nil).AnyTimes()
+		innerVM.EXPECT().LastAccepted(gomock.Any()).Return(innerBlkID, nil)
 		innerVM.EXPECT().GetBlock(gomock.Any(), innerBlkID).Return(innerBlk, nil)
 	}
 
@@ -2535,13 +2534,12 @@ func TestVM_VerifyBlockWithContext(t *testing.T) {
 		gomock.Any(),
 	).Return(nil)
 	innerVM.EXPECT().VerifyHeightIndex(gomock.Any()).Return(nil)
-	innerVM.EXPECT().SetPreference(gomock.Any(), gomock.Any()).Return(nil)
 	innerVM.EXPECT().Shutdown(gomock.Any()).Return(nil)
 
 	{
 		innerBlk := snowman.NewMockBlock(ctrl)
 		innerBlkID := ids.GenerateTestID()
-		innerVM.EXPECT().LastAccepted(gomock.Any()).Return(innerBlkID, nil).AnyTimes()
+		innerVM.EXPECT().LastAccepted(gomock.Any()).Return(innerBlkID, nil)
 		innerVM.EXPECT().GetBlock(gomock.Any(), innerBlkID).Return(innerBlk, nil)
 	}
 
@@ -3238,82 +3236,6 @@ func TestPreferencePersistenceReject(t *testing.T) {
 		require.ErrorIs(err, database.ErrNotFound)
 
 		require.NoError(proposerVM.Shutdown(ctx))
-	}
-}
-
-// When the VM is created, it should have its initial preference set for
-// consensus.
-func TestProposerVMPreferenceSetOnInitialize(t *testing.T) {
-	require := require.New(t)
-	ctx := context.Background()
-
-	preferredID := ids.GenerateTestID()
-	innerVM := &block.TestVM{
-		TestVM: common.TestVM{
-			InitializeF: func(
-				context.Context,
-				*snow.Context,
-				database.Database,
-				[]byte,
-				[]byte,
-				[]byte,
-				chan<- common.Message,
-				[]*common.Fx,
-				common.AppSender,
-			) error {
-				return nil
-			},
-		},
-		LastAcceptedF: func(context.Context) (ids.ID, error) {
-			return ids.Empty, nil
-		},
-		GetBlockF: func(context.Context, ids.ID) (snowman.Block, error) {
-			return nil, nil
-		},
-		VerifyHeightIndexF: func(context.Context) error {
-			return nil
-		},
-	}
-
-	chainCtx := snowtest.Context(t, ids.GenerateTestID())
-	db := memdb.New()
-
-	// In a previous session, we set our previous preference
-	{
-		vm := New(innerVM, Config{})
-		require.NoError(vm.Initialize(
-			ctx,
-			chainCtx,
-			db,
-			nil,
-			nil,
-			nil,
-			make(chan common.Message),
-			nil,
-			&common.SenderTest{},
-		))
-		require.NoError(vm.SetPreference(ctx, preferredID))
-		require.Equal(preferredID, vm.GetPreference())
-		require.NoError(vm.Shutdown(ctx))
-	}
-
-	// Upon restart, we should reset our initial preference for consensus to
-	// whatever we preferred previously
-	{
-		vm := New(innerVM, Config{})
-		require.NoError(vm.Initialize(
-			context.Background(),
-			chainCtx,
-			db,
-			nil,
-			nil,
-			nil,
-			make(chan common.Message),
-			nil,
-			&common.SenderTest{},
-		))
-		require.Equal(preferredID, vm.GetPreference())
-		require.NoError(vm.Shutdown(ctx))
 	}
 }
 
