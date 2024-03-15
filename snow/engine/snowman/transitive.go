@@ -476,6 +476,12 @@ func (t *Transitive) Start(ctx context.Context, startReqID uint32) error {
 		return err
 	}
 
+	// latest preference
+	preferredTip := lastAcceptedID
+	if preferredBlock.Height() > lastAccepted.Height() {
+		preferredTip = preferredID
+	}
+
 	preferredChain := make([]snowman.Block, 0, 1)
 	for preferredBlock.Status() == choices.Processing {
 		// During bootstrap our accepted tip can grow, so we should only
@@ -537,13 +543,13 @@ func (t *Transitive) Start(ctx context.Context, startReqID uint32) error {
 		}
 	}
 
-	if err := t.VM.SetPreference(ctx, preferredID); err != nil {
+	if err := t.VM.SetPreference(ctx, preferredTip); err != nil {
 		return err
 	}
 
 	t.Ctx.Log.Info("consensus starting",
 		zap.Stringer("lastAcceptedBlock", lastAcceptedID),
-		zap.Stringer("preferredBlock", preferredID),
+		zap.Stringer("preferredBlock", preferredTip),
 	)
 	t.metrics.bootstrapFinished.Set(1)
 
