@@ -70,7 +70,7 @@ func (s *state) pruneVerifiedBlocks(db *versiondb.Database) error {
 	preferredIDBytes, err := s.chainState.db.Get(preferredKey)
 	switch {
 	case err != nil && err != database.ErrNotFound:
-		return nil
+		return err
 	case err == database.ErrNotFound:
 		return nil
 	}
