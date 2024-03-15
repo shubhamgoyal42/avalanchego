@@ -81,6 +81,7 @@ func (s *chainState) HasVerifiedBlock(blkID ids.ID) (bool, error) {
 func (s *chainState) DeleteVerifiedBlock(blkID ids.ID) error {
 	return s.db.Delete(verifiedBlockKey(blkID))
 }
+
 func (s *chainState) SetPreference(preferredID ids.ID) error {
 	return s.db.Put(preferredKey, preferredID[:])
 }
