@@ -895,7 +895,9 @@ func (h *handler) executeAsyncMsg(ctx context.Context, msg Message) error {
 
 // Any returned error is treated as fatal
 func (h *handler) handleChanMsg(msg message.InboundMessage) error {
-	logging.TheLogger.Info("$$$$ handleChanMsg", zap.Any("node id", msg.NodeID().String()), zap.Any("msg", msg.String()))
+	if msg.Op() != message.GossipRequestOp {
+		logging.TheLogger.Info("$$$$ handleChanMsg", zap.Any("node id", msg.NodeID().String()), zap.Any("msg", msg.String()))
+	}
 	var (
 		op        = msg.Op()
 		body      = msg.Message()
