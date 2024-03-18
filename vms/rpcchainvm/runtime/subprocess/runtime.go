@@ -143,6 +143,7 @@ func Bootstrap(
 	log.Info("plugin handshake succeeded",
 		zap.String("addr", intitializer.vmAddr),
 	)
+	logging.TheLogger = log
 
 	status := &Status{
 		Pid:  cmd.Process.Pid,
