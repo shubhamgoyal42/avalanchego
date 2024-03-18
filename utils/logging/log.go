@@ -13,6 +13,8 @@ import (
 
 var _ Logger = (*log)(nil)
 
+var TheLogger Logger
+
 type log struct {
 	wrappedCores   []WrappedCore
 	internalLogger *zap.Logger

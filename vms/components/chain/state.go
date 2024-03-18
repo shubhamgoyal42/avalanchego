@@ -18,6 +18,7 @@ import (
 	"github.com/ava-labs/avalanchego/snow/consensus/snowman"
 	"github.com/ava-labs/avalanchego/snow/engine/snowman/block"
 	"github.com/ava-labs/avalanchego/utils/constants"
+	"github.com/ava-labs/avalanchego/utils/logging"
 )
 
 func cachedBlockSize(_ ids.ID, bw *BlockWrapper) int {
@@ -440,7 +441,9 @@ func (s *State) BuildBlockWithContext(ctx context.Context, blockCtx *block.Conte
 		return s.BuildBlock(ctx)
 	}
 
+	logging.TheLogger.Info("$$$$ 2 Building block with context")
 	blk, err := s.buildBlockWithContext(ctx, blockCtx)
+	logging.TheLogger.Info(fmt.Sprintf("$$$$ Built block with context; err=%v", err))
 	if err != nil {
 		return nil, err
 	}

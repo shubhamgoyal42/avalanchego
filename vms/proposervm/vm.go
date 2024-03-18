@@ -25,6 +25,7 @@ import (
 	"github.com/ava-labs/avalanchego/snow/engine/common"
 	"github.com/ava-labs/avalanchego/snow/engine/snowman/block"
 	"github.com/ava-labs/avalanchego/utils/constants"
+	"github.com/ava-labs/avalanchego/utils/logging"
 	"github.com/ava-labs/avalanchego/utils/math"
 	"github.com/ava-labs/avalanchego/utils/timer/mockable"
 	"github.com/ava-labs/avalanchego/utils/units"
@@ -274,6 +275,8 @@ func (vm *VM) SetState(ctx context.Context, newState snow.State) error {
 }
 
 func (vm *VM) BuildBlock(ctx context.Context) (snowman.Block, error) {
+	logging.TheLogger.Info("$$$$ main BuildBlock")
+	// logging.TheLogger.Info(string(debug.Stack()))
 	preferredBlock, err := vm.getBlock(ctx, vm.preferred)
 	if err != nil {
 		vm.ctx.Log.Error("unexpected build block failure",

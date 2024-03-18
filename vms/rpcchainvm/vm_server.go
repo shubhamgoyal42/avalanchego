@@ -366,8 +366,10 @@ func (vm *VMServer) BuildBlock(ctx context.Context, req *vmpb.BuildBlockRequest)
 		err error
 	)
 	if vm.bVM == nil || req.PChainHeight == nil {
+		logging.TheLogger.Info("$$$$ rpcchainvm BuildBlock")
 		blk, err = vm.vm.BuildBlock(ctx)
 	} else {
+		logging.TheLogger.Info("$$$$ rpcchainvm BuildBlockWithContext")
 		blk, err = vm.bVM.BuildBlockWithContext(ctx, &block.Context{
 			PChainHeight: *req.PChainHeight,
 		})

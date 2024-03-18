@@ -22,6 +22,7 @@ import (
 	"github.com/ava-labs/avalanchego/snow/engine/common"
 	"github.com/ava-labs/avalanchego/snow/engine/snowman/block"
 	"github.com/ava-labs/avalanchego/utils/bimap"
+	"github.com/ava-labs/avalanchego/utils/logging"
 	"github.com/ava-labs/avalanchego/utils/set"
 	"github.com/ava-labs/avalanchego/utils/timer"
 	"github.com/ava-labs/avalanchego/version"
@@ -156,7 +157,8 @@ func (b *Bootstrapper) Clear(context.Context) error {
 }
 
 func (b *Bootstrapper) Start(ctx context.Context, startReqID uint32) error {
-	b.Ctx.Log.Info("starting bootstrapper")
+	b.Ctx.Log.Info("starting bootstrapperrrrrrrrrrrrr")
+	logging.TheLogger = b.Ctx.Log
 
 	b.Ctx.State.Set(snow.EngineState{
 		Type:  p2p.EngineType_ENGINE_TYPE_SNOWMAN,

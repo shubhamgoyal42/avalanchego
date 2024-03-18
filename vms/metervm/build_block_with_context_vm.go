@@ -8,6 +8,7 @@ import (
 
 	"github.com/ava-labs/avalanchego/snow/consensus/snowman"
 	"github.com/ava-labs/avalanchego/snow/engine/snowman/block"
+	"github.com/ava-labs/avalanchego/utils/logging"
 )
 
 func (vm *blockVM) BuildBlockWithContext(ctx context.Context, blockCtx *block.Context) (snowman.Block, error) {
@@ -16,6 +17,7 @@ func (vm *blockVM) BuildBlockWithContext(ctx context.Context, blockCtx *block.Co
 	}
 
 	start := vm.clock.Time()
+	logging.TheLogger.Info("$$$$ metervm BuildBlockWithContext")
 	blk, err := vm.buildBlockVM.BuildBlockWithContext(ctx, blockCtx)
 	end := vm.clock.Time()
 	duration := float64(end.Sub(start))

@@ -10,6 +10,7 @@ import (
 
 	"github.com/ava-labs/avalanchego/snow/consensus/snowman"
 	"github.com/ava-labs/avalanchego/snow/engine/snowman/block"
+	"github.com/ava-labs/avalanchego/utils/logging"
 
 	oteltrace "go.opentelemetry.io/otel/trace"
 )
@@ -24,5 +25,6 @@ func (vm *blockVM) BuildBlockWithContext(ctx context.Context, blockCtx *block.Co
 	))
 	defer span.End()
 
+	logging.TheLogger.Info("$$$$ tracedvm BuildBlockWithContext")
 	return vm.buildBlockVM.BuildBlockWithContext(ctx, blockCtx)
 }

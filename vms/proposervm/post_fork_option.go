@@ -11,6 +11,7 @@ import (
 
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/snow/choices"
+	"github.com/ava-labs/avalanchego/utils/logging"
 	"github.com/ava-labs/avalanchego/vms/proposervm/block"
 )
 
@@ -117,6 +118,7 @@ func (b *postForkOption) buildChild(ctx context.Context) (Block, error) {
 		)
 		return nil, err
 	}
+	logging.TheLogger.Info("$$$$ postForkOption buildChild")
 	return b.postForkCommonComponents.buildChild(
 		ctx,
 		parentID,

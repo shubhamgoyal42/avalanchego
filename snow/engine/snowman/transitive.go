@@ -477,6 +477,7 @@ func (t *Transitive) Notify(ctx context.Context, msg common.Message) error {
 	switch msg {
 	case common.PendingTxs:
 		// the pending txs message means we should attempt to build a block.
+		logging.TheLogger.Info("$$$$ Notify PendingTxs", zap.Any("pendingBuildBlocks", t.pendingBuildBlocks))
 		t.pendingBuildBlocks++
 		return t.buildBlocks(ctx)
 	case common.StateSyncDone:
@@ -669,6 +670,7 @@ func (t *Transitive) buildBlocks(ctx context.Context) error {
 		return err
 	}
 	for t.pendingBuildBlocks > 0 && t.Consensus.NumProcessing() < t.Params.OptimalProcessing {
+		logging.TheLogger.Info("$$$$ buildBlocks", zap.Any("pendingBuildBlocks", t.pendingBuildBlocks), zap.Any("NumProcessing", t.Consensus.NumProcessing()), zap.Any("OptimalProcessing", t.Params.OptimalProcessing))
 		t.pendingBuildBlocks--
 
 		blk, err := t.VM.BuildBlock(ctx)

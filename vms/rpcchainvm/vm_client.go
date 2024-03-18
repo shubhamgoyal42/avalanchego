@@ -32,6 +32,7 @@ import (
 	"github.com/ava-labs/avalanchego/snow/engine/snowman/block"
 	"github.com/ava-labs/avalanchego/snow/validators/gvalidators"
 	"github.com/ava-labs/avalanchego/utils/crypto/bls"
+	"github.com/ava-labs/avalanchego/utils/logging"
 	"github.com/ava-labs/avalanchego/utils/resource"
 	"github.com/ava-labs/avalanchego/utils/units"
 	"github.com/ava-labs/avalanchego/utils/wrappers"
@@ -391,9 +392,11 @@ func (vm *VMClient) Disconnected(ctx context.Context, nodeID ids.NodeID) error {
 // If the underlying VM doesn't actually implement this method, its [BuildBlock]
 // method will be called instead.
 func (vm *VMClient) buildBlockWithContext(ctx context.Context, blockCtx *block.Context) (snowman.Block, error) {
+	logging.TheLogger.Info("$$$$ 3 buildBlockWithContext")
 	resp, err := vm.client.BuildBlock(ctx, &vmpb.BuildBlockRequest{
 		PChainHeight: &blockCtx.PChainHeight,
 	})
+	logging.TheLogger.Info(fmt.Sprintf("$$$$ buildBlockWithContext done: %v, err=%v", blockCtx.PChainHeight, err))
 	if err != nil {
 		return nil, err
 	}

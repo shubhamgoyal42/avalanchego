@@ -15,6 +15,7 @@ import (
 	"github.com/ava-labs/avalanchego/snow"
 	"github.com/ava-labs/avalanchego/snow/choices"
 	"github.com/ava-labs/avalanchego/snow/consensus/snowman"
+	"github.com/ava-labs/avalanchego/utils/logging"
 	"github.com/ava-labs/avalanchego/vms/proposervm/block"
 	"github.com/ava-labs/avalanchego/vms/proposervm/proposer"
 
@@ -222,6 +223,7 @@ func (p *postForkCommonComponents) buildChild(
 
 	var innerBlock snowman.Block
 	if p.vm.blockBuilderVM != nil {
+		logging.TheLogger.Info("$$$$ 1 blockBuilderVM.BuildBlockWithContext")
 		innerBlock, err = p.vm.blockBuilderVM.BuildBlockWithContext(ctx, &smblock.Context{
 			PChainHeight: parentPChainHeight,
 		})
