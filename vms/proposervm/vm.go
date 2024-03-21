@@ -898,7 +898,7 @@ func (vm *VM) notifyInnerBlockReady() {
 	select {
 	case vm.toScheduler <- common.PendingTxs:
 	default:
-		vm.ctx.Log.Debug("dropping message to consensus engine")
+		vm.ctx.Log.Info("$$$$ dropping message to consensus engine")
 	}
 }
 

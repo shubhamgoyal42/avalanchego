@@ -201,6 +201,7 @@ func (p *postForkCommonComponents) buildChild(
 
 	var shouldBuildSignedBlock bool
 	if p.vm.IsDurangoActivated(parentTimestamp) {
+		p.vm.ctx.Log.Info("$$$$ calling shouldBuildSignedBlockPostDurango")
 		shouldBuildSignedBlock, err = p.shouldBuildSignedBlockPostDurango(
 			ctx,
 			parentID,
@@ -209,6 +210,7 @@ func (p *postForkCommonComponents) buildChild(
 			newTimestamp,
 		)
 	} else {
+		p.vm.ctx.Log.Info("$$$$ calling shouldBuildSignedBlockPreDurango")
 		shouldBuildSignedBlock, err = p.shouldBuildSignedBlockPreDurango(
 			ctx,
 			parentID,
@@ -218,6 +220,7 @@ func (p *postForkCommonComponents) buildChild(
 		)
 	}
 	if err != nil {
+		p.vm.ctx.Log.Error("shouldBuildSignedBlock failed", zap.Error(err))
 		return nil, err
 	}
 
@@ -399,7 +402,12 @@ func (p *postForkCommonComponents) shouldBuildSignedBlockPostDurango(
 	parentTimestamp time.Time,
 	parentPChainHeight uint64,
 	newTimestamp time.Time,
-) (bool, error) {
+) (shouldBuild bool, err error) {
+	// print the returned value
+	defer func() {
+		p.vm.ctx.Log.Info("$$$$ shouldBuildSignedBlockPostDurango returned", zap.Bool("shouldBuild", shouldBuild), zap.Error(err))
+	}()
+	p.vm.ctx.Log.Info("$$$$ shouldBuildSignedBlockPostDurango start")
 	parentHeight := p.innerBlk.Height()
 	currentSlot := proposer.TimeToSlot(parentTimestamp, newTimestamp)
 	expectedProposerID, err := p.vm.Windower.ExpectedProposer(
