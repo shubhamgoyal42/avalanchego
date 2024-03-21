@@ -191,7 +191,7 @@ func (p *postForkCommonComponents) buildChild(
 	// is at least the parent's P-Chain height
 	pChainHeight, err := p.vm.optimalPChainHeight(ctx, parentPChainHeight)
 	if err != nil {
-		p.vm.ctx.Log.Error("unexpected build block failure",
+		p.vm.ctx.Log.Error("$$$$ unexpected build block failure",
 			zap.String("reason", "failed to calculate optimal P-chain height"),
 			zap.Stringer("parentID", parentID),
 			zap.Error(err),
@@ -433,7 +433,7 @@ func (p *postForkCommonComponents) shouldBuildSignedBlockPostDurango(
 	// It's not our turn to propose a block yet. This is likely caused by having
 	// previously notified the consensus engine to attempt to build a block on
 	// top of a block that is no longer the preferred block.
-	p.vm.ctx.Log.Debug("build block dropped",
+	p.vm.ctx.Log.Info("$$$$ build block dropped",
 		zap.Time("parentTimestamp", parentTimestamp),
 		zap.Time("blockTimestamp", newTimestamp),
 		zap.Uint64("slot", currentSlot),

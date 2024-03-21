@@ -10,11 +10,13 @@ import (
 	"math/bits"
 	"time"
 
+	"go.uber.org/zap"
 	"gonum.org/v1/gonum/mathext/prng"
 
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/snow/validators"
 	"github.com/ava-labs/avalanchego/utils"
+	"github.com/ava-labs/avalanchego/utils/logging"
 	"github.com/ava-labs/avalanchego/utils/math"
 	"github.com/ava-labs/avalanchego/utils/sampler"
 	"github.com/ava-labs/avalanchego/utils/wrappers"
@@ -112,7 +114,10 @@ func New(state validators.State, subnetID, chainID ids.ID) Windower {
 	}
 }
 
-func (w *windower) Proposers(ctx context.Context, blockHeight, pChainHeight uint64, maxWindows int) ([]ids.NodeID, error) {
+func (w *windower) Proposers(ctx context.Context, blockHeight, pChainHeight uint64, maxWindows int) (nodeIds []ids.NodeID, err error) {
+	defer func() {
+		logging.TheLogger.Info("$$$$ proposer.Proposers", zap.Any("nodeIds", nodeIds), zap.Error(err))
+	}()
 	// Note: The 32-bit prng is used here for legacy reasons. All other usages
 	// of a prng in this file should use the 64-bit version.
 	source := prng.NewMT19937()
@@ -144,7 +149,10 @@ func (w *windower) Proposers(ctx context.Context, blockHeight, pChainHeight uint
 	return nodeIDs, nil
 }
 
-func (w *windower) Delay(ctx context.Context, blockHeight, pChainHeight uint64, validatorID ids.NodeID, maxWindows int) (time.Duration, error) {
+func (w *windower) Delay(ctx context.Context, blockHeight, pChainHeight uint64, validatorID ids.NodeID, maxWindows int) (t time.Duration, err error) {
+	defer func() {
+		logging.TheLogger.Info("$$$$ proposer.Delay", zap.Duration("t", t), zap.Error(err))
+	}()
 	if validatorID == ids.EmptyNodeID {
 		return time.Duration(maxWindows) * WindowDuration, nil
 	}
@@ -169,7 +177,11 @@ func (w *windower) ExpectedProposer(
 	blockHeight,
 	pChainHeight,
 	slot uint64,
-) (ids.NodeID, error) {
+) (nodeIds ids.NodeID, err error) {
+	defer func() {
+		logging.TheLogger.Info("$$$$ proposer.ExpectedProposer", zap.Any("nodeIds", nodeIds), zap.Error(err))
+	}()
+
 	source := prng.NewMT19937_64()
 	sampler, validators, err := w.makeSampler(ctx, pChainHeight, source)
 	if err != nil {
@@ -194,7 +206,11 @@ func (w *windower) MinDelayForProposer(
 	pChainHeight uint64,
 	nodeID ids.NodeID,
 	startSlot uint64,
-) (time.Duration, error) {
+) (t time.Duration, err error) {
+	defer func() {
+		logging.TheLogger.Info("$$$$ proposer.MinDelayForProposer", zap.Duration("t", t), zap.Error(err))
+	}()
+
 	source := prng.NewMT19937_64()
 	sampler, validators, err := w.makeSampler(ctx, pChainHeight, source)
 	if err != nil {

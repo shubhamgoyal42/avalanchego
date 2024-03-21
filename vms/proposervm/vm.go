@@ -895,6 +895,7 @@ func (vm *VM) verifyAndRecordInnerBlk(ctx context.Context, blockCtx *block.Conte
 // notifyInnerBlockReady tells the scheduler that the inner VM is ready to build
 // a new block
 func (vm *VM) notifyInnerBlockReady() {
+	vm.ctx.Log.Info("$$$$ notifyInnerBlockReady")
 	select {
 	case vm.toScheduler <- common.PendingTxs:
 	default:

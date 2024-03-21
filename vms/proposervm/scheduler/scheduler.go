@@ -104,6 +104,7 @@ waitloop:
 }
 
 func (s *scheduler) SetBuildBlockTime(t time.Time) {
+	logging.TheLogger.Info("$$$$ scheduler SetBuildBlockTime", zap.Time("t", t))
 	s.newBuildBlockTime <- t
 }
 
