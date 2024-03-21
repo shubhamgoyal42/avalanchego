@@ -208,7 +208,8 @@ func (w *windower) MinDelayForProposer(
 	startSlot uint64,
 ) (t time.Duration, err error) {
 	defer func() {
-		logging.TheLogger.Info("$$$$ proposer.MinDelayForProposer", zap.Duration("t", t), zap.Error(err))
+		logging.TheLogger.Info("$$$$ proposer.MinDelayForProposer args", zap.Uint64("blockHeight", blockHeight), zap.Uint64("pChainHeight", pChainHeight), zap.String("nodeID", nodeID.String()), zap.Uint64("startSlot", startSlot))
+		logging.TheLogger.Info("$$$$ proposer.MinDelayForProposer returned", zap.Duration("t", t), zap.Error(err))
 	}()
 
 	source := prng.NewMT19937_64()
@@ -234,11 +235,13 @@ func (w *windower) MinDelayForProposer(
 		}
 
 		if expectedNodeID == nodeID {
+			logging.TheLogger.Info("$$$$ proposer.MinDelayForProposer returning", zap.Uint64("slot", slot), zap.Duration("WindowDuration", time.Duration(WindowDuration)), zap.Duration("t", time.Duration(slot)*WindowDuration))
 			return time.Duration(slot) * WindowDuration, nil
 		}
 	}
 
 	// no slots scheduled for the max window we inspect. Return max delay
+	logging.TheLogger.Info("$$$$ proposer.MinDelayForProposer returning", zap.Uint64("maxSlot", maxSlot), zap.Duration("WindowDuration", time.Duration(WindowDuration)), zap.Duration("t", time.Duration(maxSlot)*WindowDuration))
 	return time.Duration(maxSlot) * WindowDuration, nil
 }
 
